@@ -46,7 +46,7 @@ $BasePath = "J:\Snapshots"
 $FileExt = "jpg"
 
 # The sub-folder to process.  Defaults to the current date.
-$Today = (Get-Date).AddDays(-6).ToString("yyyy-MM-dd")
+$Today = (Get-Date).ToString("yyyy-MM-dd")
 
 ##################
 
