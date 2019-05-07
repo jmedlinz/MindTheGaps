@@ -15,11 +15,9 @@ Total worked: 4.1 hours (247 minutes)
 ```
 
 
-<!--
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
--->
+Download this script from [GitHub](https://github.com/jmedlinz/MindTheGaps).
 
 ### Prerequisites
 
