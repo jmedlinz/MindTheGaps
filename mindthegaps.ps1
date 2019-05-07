@@ -20,6 +20,7 @@
 .EXAMPLE
 	Run the script as:
 		.\mindthegaps.ps1
+
 	Output will be the work done for that day, as analyzed from that day's folder of snapshot images:
 		7:52 am - 8:15 am : 0.4 hours (23 minutes)
 		8:26 am - 11:37 am : 3.2 hours (191 minutes)
@@ -28,8 +29,8 @@
 		8:33 pm - 8:59 pm : 0.4 hours (26 minutes)
 		Total worked: 6.4 hours (386 minutes)
 .PARAMETER DaysBack
-	The number of days back from today to process.  So, -1 would use the data from yesterday, and -7 would use the data from a week ago.
-	Since positive numbers are meaningless here, the sign is ignored: -7 and 7 would both use the data from a week ago.
+	The number of days back from today to process.  So, -1 would use the data from yesterday, and -7 would use the data from a week ago.  Since positive numbers are meaningless here, the sign is ignored: -7 and 7 would both use the data from a week ago.
+	
 	The default is today, ie 0.
 #>
 
