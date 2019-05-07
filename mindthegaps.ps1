@@ -28,9 +28,21 @@
         2:33 pm - 4:04 pm : 1.5 hours (91 minutes)  
         8:33 pm - 8:59 pm : 0.4 hours (26 minutes)  
         Total worked: 6.4 hours (386 minutes)       
+.PARAMETER DaysBack 
+    The number of days back from today to process.  So, -1 would use the data from yesterday, and -7 would use the data from a week ago.
+    Since positive numbers are meaningless here, the sign is ignored: -7 and 7 would both use the data from a week ago.
+    The default is today, ie 0.
 #>
 
 #######################################################################
+
+param (
+    [string]$DaysBack = 0
+ )
+
+ $DaysBack =  [math]::Abs($DaysBack)
+
+##################
 
 # Constant that indicates how many minutes of inactivity to ignore.  
 # If we're inactive for more than this many minutes then treat it as a break, and a gap begins.
@@ -46,7 +58,7 @@ $BasePath = "J:\Snapshots"
 $FileExt = "jpg"
 
 # The sub-folder to process.  Defaults to the current date.
-$Today = (Get-Date).ToString("yyyy-MM-dd")
+$ThisDay = (Get-Date).AddDays(-$DaysBack).ToString("yyyy-MM-dd")
 
 ##################
 
@@ -57,7 +69,7 @@ $TotalWorkTime = 0;
 
 # Get a list of all the files in the target folder, sorted by the UTC CreationTime.
 # Use UTC in all the internal calculations so we don't have to worry about Daylight Saving times.
-$Files = Get-ChildItem "$BasePath\$Today" -Filter "*.$FileExt" | 
+$Files = Get-ChildItem "$BasePath\$ThisDay" -Filter "*.$FileExt" | 
 Where-Object { -not $_.PsIsContainer } | 
 Sort-Object -Property @{Expression = "CreationTimeUtc"}, @{Expression = "Name"}
 
@@ -70,7 +82,7 @@ Foreach ($ThisFile in $Files) {
     # If this is the first file we're examining, set up the tracking variables.
     if ($FileIndex -eq 1) {
 
-        Write-Output "Processing $LastIndex files"
+        Write-Output "Processing $LastIndex files in the $ThisDay folder"
 
         # This is when we first start working.
         $StartWork = $ThisFile
