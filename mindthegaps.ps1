@@ -18,8 +18,7 @@
 .LINK
 	https://github.com/jmedlinz/MindTheGaps
 .EXAMPLE
-	Run the script as:
-		.\mindthegaps.ps1
+	.\mindthegaps.ps1
 
 	Output will be the work done for that day, as analyzed from that day's folder of snapshot images:
 		7:52 am - 8:15 am : 0.4 hours (23 minutes)
@@ -28,16 +27,28 @@
 		2:33 pm - 4:04 pm : 1.5 hours (91 minutes)
 		8:33 pm - 8:59 pm : 0.4 hours (26 minutes)
 		Total worked: 6.4 hours (386 minutes)
+.EXAMPLE
+	.\mindthegaps.ps1 -1
+
+	Will analyze the files in yesterday's folder.  The value can be specified as either a positive or negative 1, but it will target yesterday's folder either way.
+.EXAMPLE
+	.\mindthegaps.ps1 -DaysBack -7 -SkipDuplicates 
+
+	Will analyze data from a week ago, and will skip any duplicate files during the analysis.
 .PARAMETER DaysBack
 	The number of days back from today to process.  So, -1 would use the data from yesterday, and -7 would use the data from a week ago.  Since positive numbers are meaningless here, the sign is ignored: -7 and 7 would both use the data from a week ago.
-	
 	The default is today, ie 0.
+.PARAMETER SkipDuplicates
+	If this command is included then the images will be examined first for duplicates.  Only the first duplicate in the folder will be kept, all others will be ignored - even if the files was created later on in the day.
+	Note that the check for duplicate files may take much longer to run that if the check is skipped.
+	The default is TRUE, ie skip any duplicate files.
 #>
 
 #######################################################################
 
 param (
-	[string]$DaysBack = 0
+	[string]$DaysBack = 0,
+	[switch]$SkipDuplicates = $FALSE
  )
 
  $DaysBack =  [math]::Abs($DaysBack)
@@ -75,48 +86,71 @@ Sort-Object -Property @{Expression = "CreationTimeUtc"}, @{Expression = "Name"}
 
 $LastIndex = ($Files | Measure-Object).Count
 
+if ($SkipDuplicates) {
+	# Find files containing duplicate images.
+	# Credit: https://stackoverflow.com/questions/16845674/removing-duplicate-files-with-powershell
+	$DuplicateFiles = 
+		Get-ChildItem "$BasePath\$ThisDay" | 
+		Get-FileHash -Algorithm MD5 |
+		Group-Object -Property Hash |
+		Where-Object -Property Count -gt 1 |
+		ForEach-Object {
+			$_.Group.Path |
+			Select -First ($_.Count -1)}
+}
+
 Foreach ($ThisFile in $Files) {
 
 	$FileIndex += 1
 
-	# If this is the first file we're examining, set up the tracking variables.
-	if ($FileIndex -eq 1) {
+	if (-not $SkipDuplicates -or $DuplicateFiles -notcontains $ThisFile.FullName) {
 
-		Write-Output "Processing $LastIndex files in the $ThisDay folder"
+		# If this is the first file we're examining, set up the tracking variables.
+		if ($FileIndex -eq 1) {
 
-		# This is when we first start working.
-		$StartWork = $ThisFile
+			Write-Output "Processing $LastIndex files in the $ThisDay folder"
 
-		$LastFile = $ThisFile
+			# This is when we first start working.
+			$StartWork = $ThisFile
 
-	} else {
+			$LastFile = $ThisFile
 
-		$FileTimeDiff = $ThisFile.CreationTimeUtc - $LastFile.CreationTimeUtc
+		} else {
 
-		# If the time difference between the last two files is greater than the BreakLimit then treat it as a break.
-		if ($FileTimeDiff.TotalMinutes -ge $BreakLimit -or $FileIndex -eq $LastIndex) {
+			Write-Information ("T.utc={0} T={1} S={2} L={3}" -f $ThisFile.CreationTimeUtc, $ThisFile.Name, $StartWork.Name, $LastFile.Name)
 
-			# If the time difference between the last and first files is greater than the WorkLimit then treat it as work.
-			$WorkTimeDiff = $LastFile.CreationTimeUtc - $StartWork.CreationTimeUtc
+			$FileTimeDiff = $ThisFile.CreationTimeUtc - $LastFile.CreationTimeUtc
 
-			if ($WorkTimeDiff.TotalMinutes -ge $WorkLimit) {
+			# If the time difference between the last two files is greater than the BreakLimit then treat it as a break.
+			if ($FileTimeDiff.TotalMinutes -ge $BreakLimit -or $FileIndex -eq $LastIndex) {
 
-				$TotalWorkTime += $WorkTimeDiff
+				# If the time difference between the last and first files is greater than the WorkLimit then treat it as work.
+				$WorkTimeDiff = $LastFile.CreationTimeUtc - $StartWork.CreationTimeUtc
 
-				#Output a line showing the timespan, the hours worked, and minutes worked.
-				$WorkTimeStringHours   = [math]::Round($WorkTimeDiff.TotalHours, 1)
-				$WorkTimeStringMinutes = [math]::Round($WorkTimeDiff.TotalMinutes)
-				$StartString    = $StartWork.CreationTime.ToShortTimeString().ToLower()
-				$FinishString   = $LastFile.CreationTime.ToShortTimeString().ToLower()
-				Write-Output "$StartString - $FinishString : $WorkTimeStringHours hours ($WorkTimeStringMinutes minutes)"
+				if ($WorkTimeDiff.TotalMinutes -ge $WorkLimit) {
+
+					$TotalWorkTime += $WorkTimeDiff
+
+					#Output a line showing the timespan, the hours worked, and minutes worked.
+					$WorkTimeStringHours   = [math]::Round($WorkTimeDiff.TotalHours, 1)
+					$WorkTimeStringMinutes = [math]::Round($WorkTimeDiff.TotalMinutes)
+					$StartString    = $StartWork.CreationTime.ToShortTimeString().ToLower()
+					$FinishString   = $LastFile.CreationTime.ToShortTimeString().ToLower()
+					Write-Output ("{0} - {1} : {2} hours ({3} minutes)" -f $StartString, $FinishString, $WorkTimeStringHours, $WorkTimeStringMinutes)
+
+				}
+
+				$StartWork = $ThisFile
 
 			}
 
-			$StartWork = $ThisFile
+			$LastFile = $ThisFile
 
 		}
 
-		$LastFile = $ThisFile
+	} else {
+
+		Write-Information ("T={0} Skipped" -f $ThisFile.Name)
 
 	}
 
