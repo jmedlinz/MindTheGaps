@@ -117,7 +117,8 @@ Foreach ($ThisFile in $Files) {
 
 		} else {
 
-			Write-Information ("T.utc={0} T={1} S={2} L={3}" -f $ThisFile.CreationTimeUtc, $ThisFile.Name, $StartWork.Name, $LastFile.Name)
+			Write-Information ("T.utc={0} T={1} S={2} L={3}" `
+					-f $ThisFile.CreationTimeUtc, $ThisFile.Name, $StartWork.Name, $LastFile.Name)
 
 			$FileTimeDiff = $ThisFile.CreationTimeUtc - $LastFile.CreationTimeUtc
 
@@ -136,7 +137,10 @@ Foreach ($ThisFile in $Files) {
 					$WorkTimeStringMinutes = [math]::Round($WorkTimeDiff.TotalMinutes)
 					$StartString    = $StartWork.CreationTime.ToShortTimeString().ToLower()
 					$FinishString   = $LastFile.CreationTime.ToShortTimeString().ToLower()
-					Write-Output ("{0} - {1} : {2} hours ({3} minutes)" -f $StartString, $FinishString, $WorkTimeStringHours, $WorkTimeStringMinutes)
+					Write-Output ("{0} - {1} : {2} hours ({3} minutes)"  `
+							-f $StartString, $FinishString,              `
+							   $WorkTimeDiff.TotalHours.ToString("0.0"), `
+							   $WorkTimeDiff.TotalMinutes.ToString("0"))
 
 				}
 
@@ -156,6 +160,5 @@ Foreach ($ThisFile in $Files) {
 
 }
 
-$TotalWorkTimeStringHours   = [math]::Round($TotalWorkTime.TotalHours, 1)
-$TotalWorkTimeStringMinutes = [math]::Round($TotalWorkTime.TotalMinutes)
-Write-Output "Total worked: $TotalWorkTimeStringHours hours ($TotalWorkTimeStringMinutes minutes)"
+Write-Output ("Total worked: {0} hours ({1} minutes)" `
+		-f $TotalWorkTime.TotalHours.ToString("0.0"), $TotalWorkTime.TotalMinutes.ToString("0"))
