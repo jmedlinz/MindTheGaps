@@ -74,7 +74,7 @@ $ThisDay = (Get-Date).AddDays(-$DaysBack).ToString("yyyy-MM-dd")
 ##################
 
 $FileIndex = 0;
-$TotalWorkTime = 0;
+$TotalWorkTime = New-TimeSpan -Hours 0 -Minutes 0;
 
 #######################################################################
 
