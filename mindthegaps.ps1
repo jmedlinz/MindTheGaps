@@ -47,11 +47,9 @@
 #######################################################################
 
 param (
-	[string]$DaysBack = 0,
+	[int]$DaysBack = 0,
 	[switch]$SkipDuplicates = $FALSE
  )
-
- $DaysBack =  [math]::Abs($DaysBack)
 
 ##################
 
@@ -68,15 +66,17 @@ $BasePath = "J:\Snapshots"
 #The file extension that the files are saved in: png, jpg, gif, etc.
 $FileExt = "jpg"
 
-# The sub-folder to process.  Defaults to the current date.
-$ThisDay = (Get-Date).AddDays(-$DaysBack).ToString("yyyy-MM-dd")
-
 ##################
 
 $FileIndex = 0;
 $TotalWorkTime = New-TimeSpan -Hours 0 -Minutes 0;
 
 #######################################################################
+
+$DaysBack = [math]::Abs($DaysBack)
+
+# The sub-folder to process.  Defaults to the current date.
+$ThisDay = (Get-Date).AddDays(-$DaysBack).ToString("yyyy-MM-dd")
 
 # Get a list of all the files in the target folder, sorted by the UTC CreationTime.
 # Use UTC in all the internal calculations so we don't have to worry about Daylight Saving times.
