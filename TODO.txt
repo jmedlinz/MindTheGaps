@@ -1,0 +1,5 @@
+Master list of TO DOs for the MindTheGaps project
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+[X] Errors when run with no data
+[ ] Check if folder exists.
