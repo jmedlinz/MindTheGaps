@@ -2,7 +2,7 @@
 .SYNOPSIS
 	Powershell script that analyzes a folder of time-based screenshots (for example, TimeSnapper) to report timespans worked and total hours worked.
 .DESCRIPTION
-	This script was designed to work with folders like those created by the [TimeSnapper](http://www.timesnapper.com/) software application.  Timesnapper create a new folder each day, and as you work it stores screenshots of your work every few seconds.  This is useful for tracking what you worked on, and when, throughout your work day.
+	This script was designed to work with folders like those created by the [TimeSnapper](http://www.timesnapper.com/) software application.  Timesnapper creates a new folder each day, and as you work it stores screenshots of your work every few seconds.  This is useful for tracking what you worked on, and when, throughout your work day.
 
 	Although the tools and reporting from Timesnapper are excellent, manually analyzing the output into a summary for my notes each day was time consuming.  This script was created to automate it.
 
@@ -30,7 +30,7 @@
 .EXAMPLE
 	.\mindthegaps.ps1 -1
 
-	Will analyze the files in yesterday's folder.  The value can be specified as either a positive or negative 1, but it will target yesterday's folder either way.
+	Will analyze the files in yesterday's folder.  The value can be specified as either a positive or negative integer, but it will target a previous folder either way.
 .EXAMPLE
 	.\mindthegaps.ps1 -DaysBack -7 -SkipDuplicates 
 
@@ -51,38 +51,24 @@ param (
 	[switch]$SkipDuplicates = $FALSE
  )
 
-##################
+$DaysBack = [math]::Abs($DaysBack)
 
-# Constant that indicates how many minutes of inactivity to ignore.
-# If we're inactive for more than this many minutes then treat it as a break, and a gap begins.
-$BreakLimit = 10;
-
-# If we're not active for at least this many minutes, don't count it as "work".
-$WorkLimit = 10;
-
-# The base folder to the snapshot folders.
-$BasePath = "J:\Snapshots"
-
-#The file extension that the files are saved in: png, jpg, gif, etc.
-$FileExt = "jpg"
-
-##################
+ # Load the constants.
+. ".\constants.ps1"
 
 $FileIndex = 0;
 $TotalWorkTime = New-TimeSpan -Hours 0 -Minutes 0;
 
 #######################################################################
 
-$DaysBack = [math]::Abs($DaysBack)
-
-# The sub-folder to process.  Defaults to the current date.
-$ThisDay = (Get-Date).AddDays(-$DaysBack).ToString("yyyy-MM-dd")
-
 # Get a list of all the files in the target folder, sorted by the UTC CreationTime.
 # Use UTC in all the internal calculations so we don't have to worry about Daylight Saving times.
-$Files = Get-ChildItem "$BasePath\$ThisDay" -Filter "*.$FileExt" |
+$Files = Get-ChildItem "$BasePath" -Filter "*.$FileExt" |
 Where-Object { -not $_.PsIsContainer } |
 Sort-Object -Property @{Expression = "CreationTimeUtc"}, @{Expression = "Name"}
+
+
+$VeryLastFile = $Files | Select-Object -Last 1
 
 $LastIndex = ($Files | Measure-Object).Count
 
@@ -90,7 +76,7 @@ if ($SkipDuplicates) {
 	# Find files containing duplicate images.
 	# Credit: https://stackoverflow.com/questions/16845674/removing-duplicate-files-with-powershell
 	$DuplicateFiles = 
-		Get-ChildItem "$BasePath\$ThisDay" | 
+		Get-ChildItem "$BasePath" | 
 		Get-FileHash -Algorithm MD5 |
 		Group-Object -Property Hash |
 		Where-Object -Property Count -gt 1 |
@@ -108,7 +94,7 @@ Foreach ($ThisFile in $Files) {
 		# If this is the first file we're examining, set up the tracking variables.
 		if ($FileIndex -eq 1) {
 
-			Write-Output "Processing $LastIndex files in the $ThisDay folder"
+			Write-Output "Processing $LastIndex files in the $BasePath folder"
 
 			# This is when we first start working.
 			$StartWork = $ThisFile
