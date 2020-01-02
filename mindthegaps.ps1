@@ -68,8 +68,6 @@ Where-Object { -not $_.PsIsContainer } |
 Sort-Object -Property @{Expression = "CreationTimeUtc"}, @{Expression = "Name"}
 
 
-$VeryLastFile = $Files | Select-Object -Last 1
-
 $LastIndex = ($Files | Measure-Object).Count
 
 if ($SkipDuplicates) {
@@ -82,7 +80,7 @@ if ($SkipDuplicates) {
 		Where-Object -Property Count -gt 1 |
 		ForEach-Object {
 			$_.Group.Path |
-			Select -First ($_.Count -1)}
+			Select-Object -First ($_.Count -1)}
 }
 
 Foreach ($ThisFile in $Files) {
@@ -119,8 +117,8 @@ Foreach ($ThisFile in $Files) {
 					$TotalWorkTime += $WorkTimeDiff
 
 					#Output a line showing the timespan, the hours worked, and minutes worked.
-					$WorkTimeStringHours   = [math]::Round($WorkTimeDiff.TotalHours, 1)
-					$WorkTimeStringMinutes = [math]::Round($WorkTimeDiff.TotalMinutes)
+					# $WorkTimeStringHours   = [math]::Round($WorkTimeDiff.TotalHours, 1)
+					# $WorkTimeStringMinutes = [math]::Round($WorkTimeDiff.TotalMinutes)
 					$StartString    = $StartWork.CreationTime.ToShortTimeString().ToLower()
 					$FinishString   = $LastFile.CreationTime.ToShortTimeString().ToLower()
 					Write-Output ("{0} - {1} : {2} hours ({3} minutes)"  `

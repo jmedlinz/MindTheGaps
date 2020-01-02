@@ -14,7 +14,7 @@
 .LINK
 	https://github.com/jmedlinz/MindTheGaps
 .EXAMPLE
-	.\findthegap.ps1 9:30am 10:00am
+	.\fillthegap.ps1 9:30am 10:00am
 
 	Output will be the files created for those times:
         Created J:\Snapshots\2019-12-27\working-09.30.00.AM.jpg
@@ -27,7 +27,7 @@
         Created J:\Snapshots\2019-12-27\working-10.00.01.AM.jpg
 
 .EXAMPLE
-	.\findthegap.ps1 9:30am 10:00am -1
+	.\fillthegap.ps1 9:30am 10:00am -1
 
     Will create the files in yesterday's folder.  The value can be specified as either a positive or negative 1, but it will target a previous folder either way.
     
@@ -108,8 +108,8 @@ function CreateDatedFile {
     New-Item -Path $WorkFile -ItemType File -Force | Out-Null
 
     # Change the Creation and Modified dates.
-    Get-ChildItem $WorkFile | % {$_.CreationTime  = $FileDateTime}
-    Get-ChildItem $WorkFile | % {$_.LastWriteTime = $FileDateTime}
+    Get-ChildItem $WorkFile | ForEach-Object {$_.CreationTime  = $FileDateTime}
+    Get-ChildItem $WorkFile | ForEach-Object {$_.LastWriteTime = $FileDateTime}
 
     Write-Output "Created $WorkFile"
 }
@@ -127,7 +127,7 @@ catch {
     Write-Output ""
     Write-Output "Valid values must be supplied for the StartTime and StopTime parameters."
     Write-Output "For example:"
-    Write-Output "   fillthegaps 9:30am 10:00am"
+    Write-Output "   fillthegap 9:30am 10:00am"
     Write-Output "This command would create several new files dated between 9:30 and 10am."
     Write-Output ""
     Exit
