@@ -65,6 +65,7 @@ $TotalWorkTime = New-TimeSpan -Hours 0 -Minutes 0;
 # Use UTC in all the internal calculations so we don't have to worry about Daylight Saving times.
 $Files = Get-ChildItem "$BasePath" -Filter "*.$FileExt" |
 Where-Object { -not $_.PsIsContainer } |
+Where-Object {($_.Name -notlike "$ClearFilePrefix*")} |
 Sort-Object -Property @{Expression = "CreationTimeUtc"}, @{Expression = "Name"}
 
 

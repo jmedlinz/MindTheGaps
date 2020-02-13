@@ -18,3 +18,9 @@ Set-Variable BasePath -option Constant -value "J:\Snapshots\$ThisDay"
 #The file extension that the files are saved in: png, jpg, gif, etc.
 #$FileExt = "jpg"
 Set-Variable FileExt -option Constant -value "jpg"
+
+# The prefix of all the renamed files.
+Set-Variable ClearFilePrefix -option Constant -value "cleared-"
+
+# The prefix of all the new files.
+Set-Variable FillFilePrefix -option Constant -value "filled-"
