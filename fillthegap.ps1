@@ -17,29 +17,29 @@
 	.\fillthegap.ps1 9:30am 10:00am
 
 	Output will be the files created for those times:
-        Created J:\Snapshots\2019-12-27\working-09.30.00.AM.jpg
-        Created J:\Snapshots\2019-12-27\working-09.35.00.AM.jpg
-        Created J:\Snapshots\2019-12-27\working-09.40.00.AM.jpg
-        Created J:\Snapshots\2019-12-27\working-09.45.00.AM.jpg
-        Created J:\Snapshots\2019-12-27\working-09.50.00.AM.jpg
-        Created J:\Snapshots\2019-12-27\working-09.55.00.AM.jpg
-        Created J:\Snapshots\2019-12-27\working-10.00.00.AM.jpg
-        Created J:\Snapshots\2019-12-27\working-10.00.01.AM.jpg
+        Created J:\Snapshots\2019-12-27\filled-09.30.00.0000.jpg
+        Created J:\Snapshots\2019-12-27\filled-09.35.00.0000.jpg
+        Created J:\Snapshots\2019-12-27\filled-09.40.00.0000.jpg
+        Created J:\Snapshots\2019-12-27\filled-09.45.00.0000.jpg
+        Created J:\Snapshots\2019-12-27\filled-09.50.00.0000.jpg
+        Created J:\Snapshots\2019-12-27\filled-09.55.00.0000.jpg
+        Created J:\Snapshots\2019-12-27\filled-10.00.00.0000.jpg
+        Created J:\Snapshots\2019-12-27\filled-10.00.01.0000.jpg
 
 .EXAMPLE
-	.\fillthegap.ps1 9:30am 10:00am -1
+	.\fillthegap.ps1 9:30pm 10:00pm -1
 
     Will create the files in yesterday's folder.  The value can be specified as either a positive or negative 1, but it will target a previous folder either way.
     
     If this example is run on Dec 27, 2019, the output would be:
-        Created J:\Snapshots\2019-12-26\working-09.30.00.AM.jpg
-        Created J:\Snapshots\2019-12-26\working-09.35.00.AM.jpg
-        Created J:\Snapshots\2019-12-26\working-09.40.00.AM.jpg
-        Created J:\Snapshots\2019-12-26\working-09.45.00.AM.jpg
-        Created J:\Snapshots\2019-12-26\working-09.50.00.AM.jpg
-        Created J:\Snapshots\2019-12-26\working-09.55.00.AM.jpg
-        Created J:\Snapshots\2019-12-26\working-10.00.00.AM.jpg
-        Created J:\Snapshots\2019-12-26\working-10.00.01.AM.jpg
+        Created J:\Snapshots\2019-12-26\filled-21.30.00.0000.jpg
+        Created J:\Snapshots\2019-12-26\filled-21.35.00.0000.jpg
+        Created J:\Snapshots\2019-12-26\filled-21.40.00.0000.jpg
+        Created J:\Snapshots\2019-12-26\filled-21.45.00.0000.jpg
+        Created J:\Snapshots\2019-12-26\filled-21.50.00.0000.jpg
+        Created J:\Snapshots\2019-12-26\filled-21.55.00.0000.jpg
+        Created J:\Snapshots\2019-12-26\filled-22.00.00.0000.jpg
+        Created J:\Snapshots\2019-12-26\filled-22.00.01.0000.jpg
 
 .PARAMETER StartTime
     The time to start the file creation, ie the start of the gap or meeting.  The format is hh:mmtt.
@@ -57,9 +57,6 @@
     Invalid values:
         10:30 am
         9pm
-.PARAMETER DaysBack
-	The number of days back from today to process.  So, -1 would use the data from yesterday, and -7 would use the data from a week ago.  Since positive numbers are meaningless here, the sign is ignored: -7 and 7 would both use the data from a week ago.
-	The default is today, ie 0.
 .PARAMETER DaysBack
 	The number of days back from today to process.  So, -1 would use the data from yesterday, and -7 would use the data from a week ago.  Since positive numbers are meaningless here, the sign is ignored: -7 and 7 would both use the data from a week ago.
 	The default is today, ie 0.
@@ -89,20 +86,17 @@ $DaysBack = [math]::Abs($DaysBack)
 #    Creating a file every $BreakLimit isn't long enough.
 #    Creating a file every $BreakLimit-1 fails if $Breaklimit is set to 1.
 # The formula used below avoids these issues and should work for all values of $Breaklimit while still being somewhat efficient.
-Set-Variable MinimalGap -option Constant -value (New-TimeSpan -Minutes ([int][Math]::Ceiling($BreakLimit / 2)))
+Set-Variable MinimalGap -option Constant -value (New-TimeSpan -Minutes ([int][Math]::Ceiling($BreakLimit / 3)))
 
 # A gap of 1 second.  Used for a workaround - see below for more info.
 Set-Variable FinalGap -option Constant -value (New-TimeSpan -Seconds 1)
-
-# The prefix of all the new files.
-Set-Variable FilePrefix -option Constant -value "working-"
 
 # This function takes care of creating a file and setting the Create and Modified dates.
 function CreateDatedFile {
     $FileDateTime = $args[0]
 
     # The full path of the file that will be created.
-    $WorkFile = "$BasePath\$FilePrefix" + $FileDateTime.ToString("hh.mm.ss.tt") + ".$FileExt"
+    $WorkFile = "$BasePath\$FillFilePrefix" + $FileDateTime.ToString("HH.mm.ss.ffff") + ".$FileExt"
 
     # Create the file.
     New-Item -Path $WorkFile -ItemType File -Force | Out-Null
