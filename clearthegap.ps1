@@ -4,7 +4,7 @@
 .DESCRIPTION
 	This script was designed to work with folders like those created by the [TimeSnapper](http://www.timesnapper.com/) software application.  Timesnapper creates a new folder each day, and as you work it stores screenshots of your work every few seconds.  This is useful for tracking what you worked on, and when, throughout your work day.
 
-    Sometimes you may use some personal time, maybe at lunch, to do some browsing or other activities that you don't want to record or use for TimeTracker or MindTheGaps.  ClearTheGaps will "clear" a block of time so it's not recognized by either application anymore.
+    Sometimes you may use some personal time, for example at lunch, to do some browsing or other activities that you don't want to use for TimeTracker or MindTheGaps.  ClearTheGaps will "clear" a block of time so it's not recognized by either application anymore.
 
 .NOTES
 	File Name  : ClearTheGap.ps1
