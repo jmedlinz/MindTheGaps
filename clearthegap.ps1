@@ -117,10 +117,10 @@ Foreach ($ThisFile in $Files) {
 
     # Write a status message for every 10th file.
     if (!($FileIndex%10)) {
-        Write-Output "Cleaning $BasePath\$ClearFilePrefix$ThisFile ..."
+        Write-Output "Clearing $BasePath\$ClearFilePrefix$ThisFile ..."
     }
     
 }
 
-Write-Output ("Cleaned {0} files from {1} to {2} on {3}." `
+Write-Output ("Cleared {0} files from {1} to {2} on {3}." `
         -f $FileIndex, $WorkStart.ToString("h:mmtt").ToLower(), $WorkStop.ToString("h:mmtt").ToLower(), $WorkStart.ToString("M/d/yyyy"))
