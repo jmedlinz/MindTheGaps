@@ -86,7 +86,7 @@ $DaysBack = [math]::Abs($DaysBack)
 #    Creating a file every $BreakLimit isn't long enough.
 #    Creating a file every $BreakLimit-1 fails if $Breaklimit is set to 1.
 # The formula used below avoids these issues and should work for all values of $Breaklimit while still being somewhat efficient.
-Set-Variable MinimalGap -option Constant -value (New-TimeSpan -Minutes ([int][Math]::Ceiling($BreakLimit / 3)))
+Set-Variable MinimalGap -option Constant -value (New-TimeSpan -Minutes ([int][Math]::Ceiling($BreakLimit / 4)))
 
 # A gap of 1 second.  Used for a workaround - see below for more info.
 Set-Variable FinalGap -option Constant -value (New-TimeSpan -Seconds 1)
