@@ -6,12 +6,12 @@
 
 	Although the tools and reporting from Timesnapper are excellent, manually analyzing the output into a summary for my notes each day was time consuming.  This script was created to automate it.
 
-	Example of output:
-	9:44 am - 10:18 am : 0.6 hours (34 minutes)
-	12:00 pm - 12:33 pm : 0.6 hours (33 minutes)
-	12:55 pm - 1:53 pm : 1 hours (59 minutes)
-	2:22 pm - 4:24 pm : 2 hours (122 minutes)
-	Total worked: 4.1 hours (247 minutes)
+    Example of output:
+		Thu:        5:56 am -  8:12 am:  2.3 hours  (136 minutes)
+		            8:42 am - 11:19 am:  2.6 hours  (157 minutes)
+		            1:11 pm -  1:15 pm:  0.1 hours    (4 minutes)
+		            2:34 pm -  5:32 pm:  3.0 hours  (178 minutes)
+		Total worked on Thu 2021-05-13:  7.9 hours  (475 minutes)
 .NOTES
 	File Name  : MindTheGaps.ps1
 	Author     : James Medlin - james@themedlins.com
@@ -21,12 +21,13 @@
 	.\mindthegaps.ps1
 
 	Output will be the work done for that day, as analyzed from that day's folder of snapshot images:
-		7:52 am - 8:15 am : 0.4 hours (23 minutes)
-		8:26 am - 11:37 am : 3.2 hours (191 minutes)
-		12:57 pm - 1:52 pm : 0.9 hours (55 minutes)
-		2:33 pm - 4:04 pm : 1.5 hours (91 minutes)
-		8:33 pm - 8:59 pm : 0.4 hours (26 minutes)
-		Total worked: 6.4 hours (386 minutes)
+		Wed:        6:10 am -  7:44 am:  1.6 hours   (94 minutes)
+		            8:35 am - 11:06 am:  2.5 hours  (152 minutes)
+		           11:39 am -  4:37 pm:  5.0 hours  (299 minutes)
+		            5:12 pm -  7:34 pm:  2.4 hours  (143 minutes)
+		            8:22 pm -  9:14 pm:  0.9 hours   (52 minutes)
+		            9:36 pm -  9:41 pm:  0.1 hours    (4 minutes)
+		Total worked on Wed 2021-05-12: 12.4 hours  (744 minutes)
 .EXAMPLE
 	.\mindthegaps.ps1 -1
 
@@ -40,8 +41,8 @@
 	The default is today, ie 0.
 .PARAMETER SkipDuplicates
 	If this command is included then the images will be examined first for duplicates.  Only the first duplicate in the folder will be kept, all others will be ignored - even if the files was created later on in the day.
-	Note that the check for duplicate files may take much longer to run that if the check is skipped.
-	The default is TRUE, ie skip any duplicate files.
+	Note that the check for duplicate files will take much longer to run than if the check is skipped.
+	The default is FALSE, ie don't check for duplicate files.
 #>
 
 #######################################################################
@@ -49,101 +50,15 @@
 param (
 	[int]$DaysBack = 0,
 	[switch]$SkipDuplicates = $FALSE
- )
+)
 
 $DaysBack = [math]::Abs($DaysBack)
 
- # Load the constants.
-. ".\constants.ps1"
+# Load the constants.
+. .\constants.ps1
 
-$FileIndex = 0;
-$TotalWorkTime = New-TimeSpan -Hours 0 -Minutes 0;
+# Include Compute-Daily-Stats, the main function to compute the stats for a day.
+. .\fx_MindTheGaps.ps1
 
-#######################################################################
-
-# Get a list of all the files in the target folder, sorted by the UTC CreationTime.
-# Use UTC in all the internal calculations so we don't have to worry about Daylight Saving times.
-$Files = Get-ChildItem "$BasePath" -Filter "*.$FileExt" |
-Where-Object { -not $_.PsIsContainer } |
-Where-Object {($_.Name -notlike "$ClearFilePrefix*")} |
-Sort-Object -Property @{Expression = "CreationTimeUtc"}, @{Expression = "Name"}
-
-
-$LastIndex = ($Files | Measure-Object).Count
-
-if ($SkipDuplicates) {
-	# Find files containing duplicate images.
-	# Credit: https://stackoverflow.com/questions/16845674/removing-duplicate-files-with-powershell
-	$DuplicateFiles = 
-		Get-ChildItem "$BasePath" | 
-		Get-FileHash -Algorithm MD5 |
-		Group-Object -Property Hash |
-		Where-Object -Property Count -gt 1 |
-		ForEach-Object {
-			$_.Group.Path |
-			Select-Object -First ($_.Count -1)}
-}
-
-Foreach ($ThisFile in $Files) {
-
-	$FileIndex += 1
-
-	if (-not $SkipDuplicates -or $DuplicateFiles -notcontains $ThisFile.FullName) {
-
-		# If this is the first file we're examining, set up the tracking variables.
-		if ($FileIndex -eq 1) {
-
-			Write-Output "Processing $LastIndex files in the $BasePath folder"
-
-			# This is when we first start working.
-			$StartWork = $ThisFile
-
-			$LastFile = $ThisFile
-
-		} else {
-
-			Write-Information ("T.utc={0} T={1} S={2} L={3}" `
-					-f $ThisFile.CreationTimeUtc, $ThisFile.Name, $StartWork.Name, $LastFile.Name)
-
-			$FileTimeDiff = $ThisFile.CreationTimeUtc - $LastFile.CreationTimeUtc
-
-			# If the time difference between the last two files is greater than the BreakLimit then treat it as a break.
-			if ($FileTimeDiff.TotalMinutes -ge $BreakLimit -or $FileIndex -eq $LastIndex) {
-
-				# If the time difference between the last and first files is greater than the WorkLimit then treat it as work.
-				$WorkTimeDiff = $LastFile.CreationTimeUtc - $StartWork.CreationTimeUtc
-
-				if ($WorkTimeDiff.TotalMinutes -ge $WorkLimit) {
-
-					$TotalWorkTime += $WorkTimeDiff
-
-					#Output a line showing the timespan, the hours worked, and minutes worked.
-					# $WorkTimeStringHours   = [math]::Round($WorkTimeDiff.TotalHours, 1)
-					# $WorkTimeStringMinutes = [math]::Round($WorkTimeDiff.TotalMinutes)
-					$StartString    = $StartWork.CreationTime.ToShortTimeString().ToLower()
-					$FinishString   = $LastFile.CreationTime.ToShortTimeString().ToLower()
-					Write-Output ("{0} - {1} : {2} hours ({3} minutes)"  `
-							-f $StartString, $FinishString,              `
-							   $WorkTimeDiff.TotalHours.ToString("0.0"), `
-							   $WorkTimeDiff.TotalMinutes.ToString("0"))
-
-				}
-
-				$StartWork = $ThisFile
-
-			}
-
-			$LastFile = $ThisFile
-
-		}
-
-	} else {
-
-		Write-Information ("T={0} Skipped" -f $ThisFile.Name)
-
-	}
-
-}
-
-Write-Output ("Total worked: {0} hours ({1} minutes)" `
-		-f $TotalWorkTime.TotalHours.ToString("0.0"), $TotalWorkTime.TotalMinutes.ToString("0"))
+# Compute this day's stats.
+Compute-Daily-Stats $DaysBack -SkipDuplicates:$SkipDuplicates | Out-Null

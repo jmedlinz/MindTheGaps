@@ -79,6 +79,14 @@ $DaysBack = [math]::Abs($DaysBack)
  # Load the common constants.
 . ".\constants.ps1"
 
+# The sub-folder to process.  Defaults to the current date.
+$ThisDay = (Get-Date).AddDays(-$DaysBack).ToString("yyyy-MM-dd")
+
+# The base folder to the snapshot folders.
+#$BasePath = "J:\Snapshots"
+#Set-Variable BasePath -option Constant -value "c:\temp\gaps\$ThisDay"
+Set-Variable BasePath -option Constant -value "J:\Snapshots\$ThisDay"
+
 $FileIndex = 0;
 
 #######################################################################
@@ -89,14 +97,14 @@ try {
     $WorkStop  = ([datetime]::parseexact($StopTime,  'h:mmtt', $null)).AddDays(-$DaysBack)
 }
 catch {
-    Write-Output ""
-    Write-Output "Invalid values were supplied for the StartTime and/or StopTime parameters."
-    Write-Output ""
-    Write-Output "Valid values must be supplied for the StartTime and StopTime parameters."
-    Write-Output "For example:"
-    Write-Output "   clearthegap 9:30am 10:00am"
-    Write-Output "This command would clear any files dated between 9:30 and 10am."
-    Write-Output ""
+    Write-Host ""
+    Write-Host "Invalid values were supplied for the StartTime and/or StopTime parameters."
+    Write-Host ""
+    Write-Host "Valid values must be supplied for the StartTime and StopTime parameters."
+    Write-Host "For example:"
+    Write-Host "   clearthegap 9:30am 10:00am"
+    Write-Host "This command would clear any files dated between 9:30 and 10am."
+    Write-Host ""
     Exit
 }
 
@@ -117,10 +125,12 @@ Foreach ($ThisFile in $Files) {
 
     # Write a status message for every 10th file.
     if (!($FileIndex%10)) {
-        Write-Output "Clearing $BasePath\$ClearFilePrefix$ThisFile ..."
+        Write-Host "Clearing" -NoNewline -ForegroundColor Black -BackgroundColor Red
+        Write-Host " $BasePath\$ClearFilePrefix$ThisFile ..." -ForegroundColor Gray
+    
     }
     
 }
 
-Write-Output ("Cleared {0} files from {1} to {2} on {3}." `
+Write-Host ("Cleared {0} files from {1} to {2} on {3}." `
         -f $FileIndex, $WorkStart.ToString("h:mmtt").ToLower(), $WorkStop.ToString("h:mmtt").ToLower(), $WorkStart.ToString("M/d/yyyy"))

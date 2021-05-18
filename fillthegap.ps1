@@ -81,6 +81,14 @@ $DaysBack = [math]::Abs($DaysBack)
  # Load the common constants.
 . ".\constants.ps1"
 
+# The sub-folder to process.  Defaults to the current date.
+$ThisDay = (Get-Date).AddDays(-$DaysBack).ToString("yyyy-MM-dd")
+
+# The base folder to the snapshot folders.
+#$BasePath = "J:\Snapshots"
+#Set-Variable BasePath -option Constant -value "c:\temp\gaps\$ThisDay"
+Set-Variable BasePath -option Constant -value "J:\Snapshots\$ThisDay"
+
 # This is the minimal time between files.
 #    Creating a file every minute unnecessarily uses more storage and processing time.
 #    Creating a file every $BreakLimit isn't long enough.
@@ -90,6 +98,8 @@ Set-Variable MinimalGap -option Constant -value (New-TimeSpan -Minutes ([int][Ma
 
 # A gap of 1 second.  Used for a workaround - see below for more info.
 Set-Variable FinalGap -option Constant -value (New-TimeSpan -Seconds 1)
+
+$global:FileIndex = 0;
 
 # This function takes care of creating a file and setting the Create and Modified dates.
 function CreateDatedFile {
@@ -105,7 +115,10 @@ function CreateDatedFile {
     Get-ChildItem $WorkFile | ForEach-Object {$_.CreationTime  = $FileDateTime}
     Get-ChildItem $WorkFile | ForEach-Object {$_.LastWriteTime = $FileDateTime}
 
-    Write-Output "Created $WorkFile"
+    Write-Host "Created" -NoNewline -ForegroundColor Black -BackgroundColor Green
+    Write-Host " $WorkFile" -ForegroundColor Gray
+
+    $global:FileIndex += 1
 }
 
 #######################################################################
@@ -116,14 +129,14 @@ try {
     $WorkStop  = ([datetime]::parseexact($StopTime,  'h:mmtt', $null)).AddDays(-$DaysBack)
 }
 catch {
-    Write-Output ""
-    Write-Output "Invalid values were supplied for the StartTime and/or StopTime parameters."
-    Write-Output ""
-    Write-Output "Valid values must be supplied for the StartTime and StopTime parameters."
-    Write-Output "For example:"
-    Write-Output "   fillthegap 9:30am 10:00am"
-    Write-Output "This command would create several new files dated between 9:30 and 10am."
-    Write-Output ""
+    Write-Host ""
+    Write-Host "Invalid values were supplied for the StartTime and/or StopTime parameters."
+    Write-Host ""
+    Write-Host "Valid values must be supplied for the StartTime and StopTime parameters."
+    Write-Host "For example:"
+    Write-Host "   fillthegap 9:30am 10:00am"
+    Write-Host "This command would create several new files dated between 9:30 and 10am."
+    Write-Host ""
     Exit
 }
 
@@ -145,3 +158,6 @@ CreateDatedFile $WorkStop
 # practice this almost never occurs since TimeSnapper creates so many files.
 # As a workaround, we'll just create one more file dated 1 second later to make sure it's not an issue.
 CreateDatedFile ($WorkStop + $FinalGap)
+
+Write-Host ("Filled {0} files from {1} to {2} on {3}." `
+        -f $global:FileIndex, $WorkStart.ToString("h:mmtt").ToLower(), $WorkStop.ToString("h:mmtt").ToLower(), $WorkStart.ToString("M/d/yyyy"))

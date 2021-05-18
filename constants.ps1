@@ -5,15 +5,7 @@ Set-Variable BreakLimit -option Constant -value 12
 
 # If we're not active for at least this many minutes, don't count it as "work".
 #$WorkLimit = 10;
-Set-Variable WorkLimit -option Constant -value 5
-
-# The sub-folder to process.  Defaults to the current date.
-$ThisDay = (Get-Date).AddDays(-$DaysBack).ToString("yyyy-MM-dd")
-
-# The base folder to the snapshot folders.
-#$BasePath = "J:\Snapshots"
-#Set-Variable BasePath -option Constant -value "c:\temp\gaps\$ThisDay"
-Set-Variable BasePath -option Constant -value "J:\Snapshots\$ThisDay"
+Set-Variable WorkLimit -option Constant -value 4
 
 #The file extension that the files are saved in: png, jpg, gif, etc.
 #$FileExt = "jpg"
