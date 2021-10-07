@@ -47,12 +47,13 @@ function Compute-Daily-Stats {
 
 	# Get a list of all the files in the target folder, sorted by the UTC CreationTime.
 	# Use UTC in all the internal calculations so we don't have to worry about Daylight Saving times.
-	$Files = Get-ChildItem "$BasePath" -Filter "*.$FileExt" -ErrorAction SilentlyContinue |
+	$Files = Get-ChildItem "$BasePath" -ErrorAction SilentlyContinue | 
+	Where-Object {$_.extension -in ".png",".jpg",".gif",".wmf",".tiff",".bmp",".emf"} |
 	Where-Object { -not $_.PsIsContainer } |
 	Where-Object {($_.Name -notlike "$ClearFilePrefix*")} |
 	Sort-Object -Property @{Expression = "CreationTimeUtc"}, @{Expression = "Name"}
 
-
+	
 	$LastIndex = ($Files | Measure-Object).Count
 
 	if ($SkipDuplicates) {

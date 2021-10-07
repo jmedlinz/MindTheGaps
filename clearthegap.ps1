@@ -111,7 +111,8 @@ catch {
 # No problems found with the params so rename the files (clear the gaps).
 
 # Get a list of all the files in the target folder, sorted by the UTC CreationTime.
-$Files = Get-ChildItem "$BasePath" -Filter "*.$FileExt" |
+$Files = Get-ChildItem "$BasePath" -ErrorAction SilentlyContinue | 
+Where-Object {$_.extension -in ".png",".jpg",".gif",".wmf",".tiff",".bmp",".emf"} |
 Where-Object { -not $_.PsIsContainer } |
 Where-Object {($_.LastWriteTime -le $WorkStop) -and ($_.LastWriteTime -ge $WorkStart)} |
 Sort-Object -Property @{Expression = "CreationTimeUtc"}, @{Expression = "Name"}

@@ -7,9 +7,9 @@ Set-Variable BreakLimit -option Constant -value 12
 #$WorkLimit = 10;
 Set-Variable WorkLimit -option Constant -value 4
 
-#The file extension that the files are saved in: png, jpg, gif, etc.
-#$FileExt = "jpg"
-Set-Variable FileExt -option Constant -value "jpg"
+#The file extension that the Filled files are saved in: png, jpg, gif, etc.
+#$FileExt_Fill = "jpg"
+Set-Variable FileExt_Fill -option Constant -value "jpg"
 
 # The prefix of all the renamed files.
 Set-Variable ClearFilePrefix -option Constant -value "cleared-"

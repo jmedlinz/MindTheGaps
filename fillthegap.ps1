@@ -106,7 +106,7 @@ function CreateDatedFile {
     $FileDateTime = $args[0]
 
     # The full path of the file that will be created.
-    $WorkFile = "$BasePath\$FillFilePrefix" + $FileDateTime.ToString("HH.mm.ss.ffff") + ".$FileExt"
+    $WorkFile = "$BasePath\$FillFilePrefix" + $FileDateTime.ToString("HH.mm.ss.ffff") + ".$FileExt_Fill"
 
     # Create the file.
     New-Item -Path $WorkFile -ItemType File -Force | Out-Null
