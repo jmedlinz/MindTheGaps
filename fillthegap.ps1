@@ -30,7 +30,7 @@
 	.\fillthegap.ps1 9:30pm 10:00pm -1
 
     Will create the files in yesterday's folder.  The value can be specified as either a positive or negative 1, but it will target a previous folder either way.
-    
+
     If this example is run on Dec 27, 2019, the output would be:
         Created J:\Snapshots\2019-12-26\filled-21.30.00.0000.jpg
         Created J:\Snapshots\2019-12-26\filled-21.35.00.0000.jpg
@@ -43,17 +43,17 @@
 
 .PARAMETER StartTime
     The time to start the file creation, ie the start of the gap or meeting.  The format is hh:mmtt.
-    Valid values: 
+    Valid values:
         10:30am
-        9:00pm  
+        9:00pm
     Invalid values:
         10:30 am
         9pm
 .PARAMETER StopTime
     The time to stop the file creation, ie the end of the gap or meeting.  The format is hh:mmtt.
-    Valid values: 
+    Valid values:
         10:30am
-        9:00pm  
+        9:00pm
     Invalid values:
         10:30 am
         9pm
@@ -85,9 +85,8 @@ $DaysBack = [math]::Abs($DaysBack)
 $ThisDay = (Get-Date).AddDays(-$DaysBack).ToString("yyyy-MM-dd")
 
 # The base folder to the snapshot folders.
-#$BasePath = "J:\Snapshots"
-#Set-Variable BasePath -option Constant -value "c:\temp\gaps\$ThisDay"
-Set-Variable BasePath -option Constant -value "J:\Snapshots\$ThisDay"
+Set-Variable BasePath    -option Constant -value (Join-Path -Path $SnapshotFolder -ChildPath $ThisDay)
+Set-Variable ArchivePath -option Constant -value ($BasePath + $ArchivePostfix)
 
 # This is the minimal time between files.
 #    Creating a file every minute unnecessarily uses more storage and processing time.
@@ -106,7 +105,7 @@ function CreateDatedFile {
     $FileDateTime = $args[0]
 
     # The full path of the file that will be created.
-    $WorkFile = "$BasePath\$FillFilePrefix" + $FileDateTime.ToString("HH.mm.ss.ffff") + ".$FileExt_Fill"
+    $WorkFile = "$ArchivePath\$FillFilePrefix" + $FileDateTime.ToString("HH.mm.ss.ffff") + ".$FileExt_Fill"
 
     # Create the file.
     New-Item -Path $WorkFile -ItemType File -Force | Out-Null
@@ -142,6 +141,11 @@ catch {
 
 # No problems found with the params so create the files (fill the gaps).
 
+# If the archive folder isn't already created then create it now.
+if (-not (Test-Path $ArchivePath)) {
+    New-Item -ItemType Directory -Path $ArchivePath -ErrorAction SilentlyContinue | Out-Null
+}
+
 # Loop through the date range, creating a file every $MinimalGap minutes.
 $WorkTime = $WorkStart
 while ($WorkTime -lt $WorkStop) {
@@ -149,7 +153,7 @@ while ($WorkTime -lt $WorkStop) {
     $WorkTime = $WorkTime + $MinimalGap
 }
 
-# Always create a file for when the gap stops too.  
+# Always create a file for when the gap stops too.
 # (Using an -lte in the while loop above won't always insure this file is created.)
 CreateDatedFile $WorkStop
 

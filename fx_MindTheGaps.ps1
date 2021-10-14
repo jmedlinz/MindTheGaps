@@ -20,13 +20,14 @@ function Compute-Daily-Stats {
 	 )
 
 	# The sub-folder to process.  Defaults to the current date.
-	$YMDFormat = (Get-Date).AddDays(-$DaysAgo).ToString("yyyy-MM-dd")
+	$ThisDay   = (Get-Date).AddDays(-$DaysAgo).ToString("yyyy-MM-dd")
 	$DayFormat = (Get-Date).AddDays(-$DaysAgo).ToString("ddd")
 
 	# The base folder to the snapshot folders.
-	#$BasePath = "J:\Snapshots"
-	#Set-Variable BasePath -option Constant -value "c:\temp\gaps\$YMDFormat"
-	Set-Variable BasePath -value "J:\Snapshots\$YMDFormat"
+	Set-Variable BasePath    -option Constant -value (Join-Path -Path $SnapshotFolder -ChildPath $ThisDay)
+	Set-Variable ArchivePath -option Constant -value ($BasePath + $ArchivePostfix)
+
+	Set-Variable KeepFilesDays -option Constant -value 45
 
 	$FileIndex = 0;
 	$RowIndex  = 0;
@@ -43,24 +44,56 @@ function Compute-Daily-Stats {
 		Fri = "Red"
 	}
 
+	function DeleteLoneArchiveFolders {
+
+		$Folders = Get-ChildItem "$SnapshotFolder" -ErrorAction SilentlyContinue |
+			Where-Object { $_.PsIsContainer } |
+			Where-Object {($_.Name -like "????-??-??$ArchivePostfix")} |
+			Where-Object {$_.CreationTimeUtc -lt (Get-Date).AddDays(-$KeepFilesDays)} |
+			Sort-Object -Property @{Expression = "Name"}, @{Expression = "CreationTimeUtc"}
+
+		Foreach ($Folder in $Folders) {
+
+			$FolderPath = $Folder.FullName | Split-Path
+			$FolderLeafArch = Join-Path -Path $FolderPath -ChildPath $Folder.Name
+			$LeafBase = ($Folder.Name.Split("."))[0]
+			$FolderLeafBase = Join-Path -Path $FolderPath -ChildPath $LeafBase
+
+			# If there's no "2021-10-13" folder but there is a
+			# "2021-10-13.archive" folder, then delete the lone archive folder.
+			if (-not (Test-Path "$FolderLeafBase") -and (Test-Path "$FolderLeafArch")) {
+				Get-ChildItem -Path "$FolderLeafArch" -Recurse | Remove-Item -Force -Recurse
+				Remove-Item "$FolderLeafArch" -Force -Recurse -ErrorAction SilentlyContinue
+				Write-Host ("{0} deleted" -f "$FolderLeafArch")
+			}
+		}
+	}
+
+
 	#######################################################################
 
-	# Get a list of all the files in the target folder, sorted by the UTC CreationTime.
-	# Use UTC in all the internal calculations so we don't have to worry about Daylight Saving times.
-	$Files = Get-ChildItem "$BasePath" -ErrorAction SilentlyContinue | 
-	Where-Object {$_.extension -in ".png",".jpg",".gif",".wmf",".tiff",".bmp",".emf"} |
-	Where-Object { -not $_.PsIsContainer } |
-	Where-Object {($_.Name -notlike "$ClearFilePrefix*")} |
-	Sort-Object -Property @{Expression = "CreationTimeUtc"}, @{Expression = "Name"}
+	# If there are .archive folders that don't have a corresponding base
+	# folder, then TimeSnapper has most likely deleted teh base folder because
+	# it was too old.  We can delete the .archive folder too.
+	DeleteLoneArchiveFolders
 
-	
-	$LastIndex = ($Files | Measure-Object).Count
+	# Get a list of all the files in the target folders, sorted by the UTC CreationTime.
+	# Use UTC in all the internal calculations so we don't have to worry about Daylight Saving times.
+	$BaseFiles    = Get-ChildItem "$BasePath"    -ErrorAction SilentlyContinue
+	$ArchiveFiles = Get-ChildItem "$ArchivePath" -ErrorAction SilentlyContinue
+	$AllFiles = $BaseFiles + $ArchiveFiles |
+		Where-Object {$_.extension -in ".png",".jpg",".gif",".wmf",".tiff",".bmp",".emf"} |
+		Where-Object { -not $_.PsIsContainer } |
+		Where-Object {($_.Name -notlike "$ClearFilePrefix*")} |
+		Sort-Object -Property @{Expression = "CreationTimeUtc"}, @{Expression = "Name"}
+
+	$LastIndex = ($AllFiles | Measure-Object).Count
 
 	if ($SkipDuplicates) {
 		# Find files containing duplicate images.
 		# Credit: https://stackoverflow.com/questions/16845674/removing-duplicate-files-with-powershell
-		$DuplicateFiles = 
-			Get-ChildItem "$BasePath" | 
+		$DuplicateFiles =
+			Get-ChildItem "$BasePath" |
 			Get-FileHash -Algorithm MD5 |
 			Group-Object -Property Hash |
 			Where-Object -Property Count -gt 1 |
@@ -69,7 +102,7 @@ function Compute-Daily-Stats {
 				Select-Object -First ($_.Count -1)}
 	}
 
-	Foreach ($ThisFile in $Files) {
+	Foreach ($ThisFile in $AllFiles) {
 
 		$FileIndex += 1
 
@@ -141,7 +174,7 @@ function Compute-Daily-Stats {
 	}
 
 	Write-Host ("Total worked on {0}: {1} hours {2} minutes)" `
-			-f "$DayFormat $YMDFormat", $DailyWorkTime.TotalHours.ToString("0.0").PadLeft(4), `
+			-f "$DayFormat $ThisDay", $DailyWorkTime.TotalHours.ToString("0.0").PadLeft(4), `
 			$DailyWorkTime.TotalMinutes.ToString("(0").PadLeft(5)) `
 			-ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
 

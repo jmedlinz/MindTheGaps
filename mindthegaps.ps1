@@ -33,7 +33,7 @@
 
 	Will analyze the files in yesterday's folder.  The value can be specified as either a positive or negative integer, but it will target a previous folder either way.
 .EXAMPLE
-	.\mindthegaps.ps1 -DaysBack -7 -SkipDuplicates 
+	.\mindthegaps.ps1 -DaysBack -7 -SkipDuplicates
 
 	Will analyze data from a week ago, and will skip any duplicate files during the analysis.
 .PARAMETER DaysBack

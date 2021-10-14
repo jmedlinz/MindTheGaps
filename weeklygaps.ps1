@@ -32,7 +32,7 @@
 		Tue:        5:29 am -  8:35 am:  3.1 hours  (186 minutes)
 		            8:57 am -  9:20 am:  0.4 hours   (23 minutes)
 		Total worked on Tue 2021-05-18:  3.5 hours  (209 minutes)
-		
+
 		Total hours worked this week:   13.1 hours  (786 minutes)
 
 .EXAMPLE
@@ -40,7 +40,7 @@
 
 	Will analyze the files in last week's folder.  The value can be specified as either a positive or negative integer, but it will target a previous week either way.  Previous weeks always start on Saturday and end on Friday.
 .EXAMPLE
-	.\weeklygaps.ps1 -WeeksBack -2 -SkipDuplicates 
+	.\weeklygaps.ps1 -WeeksBack -2 -SkipDuplicates
 
 	Will analyze data from two weeks ago, and will skip any duplicate files during the analysis.
 .PARAMETER WeeksBack
@@ -81,7 +81,7 @@ $WeeklyWorkTime = New-TimeSpan -Hours 0 -Minutes 0;
 
 # Compute this week's stats.
 for ($DaysBack = $StartDaysAgo; $DaysBack -GE $StopDaysAgo; $DaysBack--) {
-	
+
 	$DailyWorkTime = Compute-Daily-Stats $DaysBack -SkipDuplicates:$SkipDuplicates
 
 	$WeeklyWorkTime += $DailyWorkTime

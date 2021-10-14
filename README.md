@@ -8,13 +8,13 @@ This script was designed to work with folders like those created by the [TimeSna
 
 Although the tools and reporting from Timesnapper are excellent, manually analyzing the output into a summary for my notes each day was time consuming.  This script was created to automate it.
 
-Example of output:  
+Example of output:
 ```
-9:44 am - 10:18 am : 0.6 hours (34 minutes)  
-12:00 pm - 12:33 pm : 0.6 hours (33 minutes)  
-12:55 pm - 1:53 pm : 1 hours (59 minutes)  
-2:22 pm - 4:24 pm : 2 hours (122 minutes)  
-Total worked: 4.1 hours (247 minutes)  
+9:44 am - 10:18 am : 0.6 hours (34 minutes)
+12:00 pm - 12:33 pm : 0.6 hours (33 minutes)
+12:55 pm - 1:53 pm : 1 hours (59 minutes)
+2:22 pm - 4:24 pm : 2 hours (122 minutes)
+Total worked: 4.1 hours (247 minutes)
 ```
 
 ### FillTheGap
@@ -29,7 +29,7 @@ Download these scripts from [GitHub](https://github.com/jmedlinz/MindTheGaps).
 
 ## Prerequisites
 
-Although it may not necessarily be a requirement, this script was designed and tested to work with folders created by the free version of the [TimeSnapper](http://www.timesnapper.com/) software application.  
+Although it may not necessarily be a requirement, this script was designed and tested to work with folders created by the free version of the [TimeSnapper](http://www.timesnapper.com/) software application.
 
 <!--
 ### Installing
@@ -86,7 +86,7 @@ Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c6
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags).
 
 -->
 

@@ -28,7 +28,7 @@
 	.\clearthegap.ps1 9:30pm 10:00pm -1
 
     Will rename the subset of files in yesterday's folder.  The value can be specified as either a positive or negative 1, but it will target a previous folder either way.
-    
+
     If this example is run on Dec 27, 2019, the output would be:
         J:\Snapshots\2019-12-26\cleared-21.30.00.0000.jpg
         J:\Snapshots\2019-12-26\cleared-21.35.00.0000.jpg
@@ -41,17 +41,17 @@
 
 .PARAMETER StartTime
     The time to start the file rename, ie the start of the gap.  The format is hh:mmtt.
-    Valid values: 
+    Valid values:
         10:30am
-        9:00pm  
+        9:00pm
     Invalid values:
         10:30 am
         9pm
 .PARAMETER StopTime
     The time to stop the file rename, ie the end of the gap .  The format is hh:mmtt.
-    Valid values: 
+    Valid values:
         10:30am
-        9:00pm  
+        9:00pm
     Invalid values:
         10:30 am
         9pm
@@ -83,9 +83,8 @@ $DaysBack = [math]::Abs($DaysBack)
 $ThisDay = (Get-Date).AddDays(-$DaysBack).ToString("yyyy-MM-dd")
 
 # The base folder to the snapshot folders.
-#$BasePath = "J:\Snapshots"
-#Set-Variable BasePath -option Constant -value "c:\temp\gaps\$ThisDay"
-Set-Variable BasePath -option Constant -value "J:\Snapshots\$ThisDay"
+Set-Variable BasePath    -option Constant -value (Join-Path -Path $SnapshotFolder -ChildPath $ThisDay)
+Set-Variable ArchivePath -option Constant -value ($BasePath + $ArchivePostfix)
 
 $FileIndex = 0;
 
@@ -110,27 +109,36 @@ catch {
 
 # No problems found with the params so rename the files (clear the gaps).
 
-# Get a list of all the files in the target folder, sorted by the UTC CreationTime.
-$Files = Get-ChildItem "$BasePath" -ErrorAction SilentlyContinue | 
-Where-Object {$_.extension -in ".png",".jpg",".gif",".wmf",".tiff",".bmp",".emf"} |
-Where-Object { -not $_.PsIsContainer } |
-Where-Object {($_.LastWriteTime -le $WorkStop) -and ($_.LastWriteTime -ge $WorkStart)} |
-Sort-Object -Property @{Expression = "CreationTimeUtc"}, @{Expression = "Name"}
+# Get a list of all the files in the target folders, sorted by the UTC CreationTime.
+$BaseFiles    = Get-ChildItem "$BasePath"    -ErrorAction SilentlyContinue
+$ArchiveFiles = Get-ChildItem "$ArchivePath" -ErrorAction SilentlyContinue
+$AllFiles = $BaseFiles + $ArchiveFiles |
+    Where-Object {$_.extension -in ".png",".jpg",".gif",".wmf",".tiff",".bmp",".emf"} |
+    Where-Object { -not $_.PsIsContainer } |
+    Where-Object {($_.Name -notlike "$ClearFilePrefix*")} |
+    Where-Object {($_.LastWriteTime -le $WorkStop) -and ($_.LastWriteTime -ge $WorkStart)} |
+    Sort-Object -Property @{Expression = "CreationTimeUtc"}, @{Expression = "Name"}
 
 # "Clear" each of the files by renaming it.
-Foreach ($ThisFile in $Files) {
-    
+Foreach ($ThisFile in $AllFiles) {
+
     $FileIndex += 1
 
-    Rename-Item "$BasePath\$ThisFile" -NewName "$BasePath\$ClearFilePrefix$ThisFile"
+    # If the archive folder isn't already created then create it now.
+    if (-not (Test-Path $ArchivePath)) {
+        New-Item -ItemType Directory -Path $ArchivePath -ErrorAction SilentlyContinue | Out-Null
+    }
+
+    # Move the file to the archive folder, renaming it with a "cleared-" prefix.
+    $Old = $ThisFile.FullName
+    $New = Join-Path -Path $ArchivePath -ChildPath $ClearFilePrefix$ThisFile.Name
+    Move-Item -Force -Path $Old -Destination $New
 
     # Write a status message for every 10th file.
     if (!($FileIndex%10)) {
         Write-Host "Clearing" -NoNewline -ForegroundColor Black -BackgroundColor Red
-        Write-Host " $BasePath\$ClearFilePrefix$ThisFile ..." -ForegroundColor Gray
-    
+        Write-Host " $Old ..." -ForegroundColor Gray
     }
-    
 }
 
 Write-Host ("Cleared {0} files from {1} to {2} on {3}." `
