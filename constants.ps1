@@ -18,7 +18,7 @@ Set-Variable ClearFilePrefix -option Constant -value "cleared-"
 Set-Variable FillFilePrefix -option Constant -value "filled-"
 
 # The folder containing the TimeSnapper app's Snapshot files.
-Set-Variable SnapshotFolder -option Constant -value "J:\Snapshots\"
+Set-Variable SnapshotFolder -option Constant -value "C:\SnapShots\"
 
 # The postfix for the corresponding folder of MindTheGap files.
 Set-Variable ArchivePostfix -option Constant -value ".archive"
