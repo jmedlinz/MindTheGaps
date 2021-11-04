@@ -131,7 +131,7 @@ Foreach ($ThisFile in $AllFiles) {
 
     # Move the file to the archive folder, renaming it with a "cleared-" prefix.
     $Old = $ThisFile.FullName
-    $New = Join-Path -Path $ArchivePath -ChildPath $ClearFilePrefix$ThisFile.Name
+    $New = Join-Path -Path $ArchivePath -ChildPath $ClearFilePrefix$ThisFile
     Move-Item -Force -Path $Old -Destination $New
 
     # Write a status message for every 10th file.
