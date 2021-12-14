@@ -81,7 +81,17 @@ function Compute-Daily-Stats {
 	# Use UTC in all the internal calculations so we don't have to worry about Daylight Saving times.
 	$BaseFiles    = Get-ChildItem "$BasePath"    -ErrorAction SilentlyContinue
 	$ArchiveFiles = Get-ChildItem "$ArchivePath" -ErrorAction SilentlyContinue
-	$AllFiles = $BaseFiles + $ArchiveFiles |
+
+
+	if (($BaseFiles | Measure-Object).Count -gt 0) {
+		$AllFiles = $AllFiles + $BaseFiles
+	}
+
+	if (($ArchiveFiles | Measure-Object).Count -gt 0) {
+		$AllFiles = $AllFiles + $ArchiveFiles
+	}
+
+	$AllFiles = $AllFiles |
 		Where-Object {$_.extension -in ".png",".jpg",".gif",".wmf",".tiff",".bmp",".emf"} |
 		Where-Object { -not $_.PsIsContainer } |
 		Where-Object {($_.Name -notlike "$ClearFilePrefix*")} |
@@ -148,7 +158,7 @@ function Compute-Daily-Stats {
 						}
 						Write-Host $Prefix -NoNewline -ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
 						Write-Host ("       {0} - {1}: {2} hours {3} minutes)" -f `
-						        #$Prefix, `
+								#$Prefix, `
 								$StartString.PadLeft(8),  `
 								$FinishString.PadLeft(8), `
 								$WorkTimeDiff.TotalHours.ToString("0.0").PadLeft(4),  `
