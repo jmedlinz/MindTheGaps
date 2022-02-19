@@ -27,8 +27,6 @@ function Compute-Daily-Stats {
 	Set-Variable BasePath    -option Constant -value (Join-Path -Path $SnapshotFolder -ChildPath $ThisDay)
 	Set-Variable ArchivePath -option Constant -value ($BasePath + $ArchivePostfix)
 
-	Set-Variable KeepFilesDays -option Constant -value 45
-
 	$FileIndex = 0;
 	$RowIndex  = 0;
 	$DailyWorkTime = New-TimeSpan -Hours 0 -Minutes 0;

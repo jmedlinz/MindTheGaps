@@ -22,3 +22,8 @@ Set-Variable SnapshotFolder -option Constant -value "C:\SnapShots\"
 
 # The postfix for the corresponding folder of MindTheGap files.
 Set-Variable ArchivePostfix -option Constant -value ".archive"
+
+# The number of days worth of data to keep.
+# !NOTE: Take care that this value matches the Timesnapper settings:
+#        Timesnapper > Options > Archive tab > "Remove images old than: "
+Set-Variable KeepFilesDays -option Constant -value 35
