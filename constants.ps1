@@ -18,7 +18,7 @@ Set-Variable ClearFilePrefix -option Constant -value "cleared-"
 Set-Variable FillFilePrefix -option Constant -value "filled-"
 
 # The folder containing the TimeSnapper app's Snapshot files.
-Set-Variable SnapshotFolder -option Constant -value "C:\SnapShots\"
+Set-Variable SnapshotFolder -option Constant -value "D:\SnapShots\"
 
 # The postfix for the corresponding folder of MindTheGap files.
 Set-Variable ArchivePostfix -option Constant -value ".archive"
@@ -26,4 +26,4 @@ Set-Variable ArchivePostfix -option Constant -value ".archive"
 # The number of days worth of data to keep.
 # !NOTE: Take care that this value matches the Timesnapper settings:
 #        Timesnapper > Options > Archive tab > "Remove images old than: "
-Set-Variable KeepFilesDays -option Constant -value 35
+Set-Variable KeepFilesDays -option Constant -value 45
