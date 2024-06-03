@@ -79,6 +79,9 @@ $DaysBack = [math]::Abs($DaysBack)
  # Load the common constants.
 . ".\constants.ps1"
 
+# Write a status every nth file.  Gap = Nth.
+$Gap = 25
+
 # The sub-folder to process.  Defaults to the current date.
 $ThisDay = (Get-Date).AddDays(-$DaysBack).ToString("yyyy-MM-dd")
 
@@ -136,8 +139,9 @@ Foreach ($ThisFile in $AllFiles) {
     Move-Item -Force -Path $OldFullName -Destination $New
 
     # Write a status message for every 10th file.
-    if (!($FileIndex%10)) {
-        Write-Host "Clearing" -NoNewline -ForegroundColor Black -BackgroundColor Red
+    if (!($FileIndex%$Gap)) {
+        Write-Host "Cleared" -NoNewline -ForegroundColor Black -BackgroundColor Red
+        Write-Host (" {0} files including" -f $Gap) -NoNewline
         Write-Host " $OldFullName ..." -ForegroundColor Gray
     }
 }
