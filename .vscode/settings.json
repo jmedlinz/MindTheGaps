@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
         "Breaklimit",
+        "clearthegap",
         "dropwizard",
         "dups",
         "fillthegap",
@@ -9,10 +10,13 @@
         "mindthegaps",
         "mmtt",
         "parseexact",
+        "Postformat",
+        "pyenv",
         "themedlins",
         "timesnapper",
         "timespan",
-        "total"
+        "total",
+        "weeklygaps"
     ],
     "workbench.colorCustomizations": {
         "activityBar.activeBackground": "#93e6fc",

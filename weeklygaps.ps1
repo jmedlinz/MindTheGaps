@@ -51,13 +51,17 @@
 	If this command is included then the images will be examined first for duplicates.  Only the first duplicate in the folder will be kept, all others will be ignored - even if the files was created later on in the day.
 	Note that the check for duplicate files will take much longer to run than if the check is skipped.
 	The default is FALSE, ie don't check for duplicate files.
+.PARAMETER ShowGaps
+	If this command is included then the script will output the gaps between work periods.
+	The default is FALSE, ie don't show the gaps.
 #>
 
 #######################################################################
 
 param (
 	[int]$WeeksBack = 0,
-	[switch]$SkipDuplicates = $FALSE
+	[switch]$SkipDuplicates = $FALSE,
+	[switch]$ShowGaps = $FALSE
 )
 
 $WeeksBack = [math]::Abs($WeeksBack)
@@ -72,6 +76,7 @@ if ($StopDaysAgo -lt 0) {
 }
 
 $WeeklyWorkTime = New-TimeSpan -Hours 0 -Minutes 0;
+$WeeklyGapTime  = New-TimeSpan -Hours 0 -Minutes 0;
 
 # Load the constants.
 . .\constants.ps1
@@ -82,12 +87,22 @@ $WeeklyWorkTime = New-TimeSpan -Hours 0 -Minutes 0;
 # Compute this week's stats.
 for ($DaysBack = $StartDaysAgo; $DaysBack -GE $StopDaysAgo; $DaysBack--) {
 
-	$DailyWorkTime = Compute-Daily-Stats $DaysBack -SkipDuplicates:$SkipDuplicates
+	$DailyWorkTime, $DailyGapTime = Compute-Daily-Stats $DaysBack -SkipDuplicates:$SkipDuplicates -ShowGaps:$ShowGaps
 
 	$WeeklyWorkTime += $DailyWorkTime
+	$WeeklyGapTime  += $DailyGapTime
 }
 
+# Output the weekly stats.
 Write-Host ("`nTotal hours worked this week:   {0} hours {1} minutes)" `
 		-f $WeeklyWorkTime.TotalHours.ToString("0.0").PadLeft(4), `
 		$WeeklyWorkTime.TotalMinutes.ToString("(0").PadLeft(5))    `
 		-ForegroundColor Black -BackgroundColor White
+
+# If we're showing gaps then output the weekly gap stats.
+if ($ShowGaps) {
+	Write-Host ("Total gap hours this week:      {0} hours {1} minutes)" `
+		-f $WeeklyGapTime.TotalHours.ToString("0.0").PadLeft(4), `
+		$WeeklyGapTime.TotalMinutes.ToString("(0").PadLeft(5))    `
+		-ForegroundColor DarkRed -BackgroundColor White
+}

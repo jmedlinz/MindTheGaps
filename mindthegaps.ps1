@@ -43,13 +43,17 @@
 	If this command is included then the images will be examined first for duplicates.  Only the first duplicate in the folder will be kept, all others will be ignored - even if the files was created later on in the day.
 	Note that the check for duplicate files will take much longer to run than if the check is skipped.
 	The default is FALSE, ie don't check for duplicate files.
-#>
+.PARAMETER ShowGaps
+	If this command is included then the script will output the gaps between work periods.
+	The default is TRUE for this command, ie show the gaps.
+	#>
 
 #######################################################################
 
 param (
 	[int]$DaysBack = 0,
-	[switch]$SkipDuplicates = $FALSE
+	[switch]$SkipDuplicates = $FALSE,
+	[switch]$ShowGaps = $TRUE
 )
 
 $DaysBack = [math]::Abs($DaysBack)
@@ -61,4 +65,4 @@ $DaysBack = [math]::Abs($DaysBack)
 . .\fx_MindTheGaps.ps1
 
 # Compute this day's stats.
-Compute-Daily-Stats $DaysBack -SkipDuplicates:$SkipDuplicates | Out-Null
+Compute-Daily-Stats $DaysBack -SkipDuplicates:$SkipDuplicates -ShowGaps:$ShowGaps | Out-Null

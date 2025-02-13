@@ -7,6 +7,9 @@
 	If this command is included then the images will be examined first for duplicates.  Only the first duplicate in the folder will be kept, all others will be ignored - even if the files was created later on in the day.
 	Note that the check for duplicate files will take much longer to run than if the check is skipped.
 	The default is FALSE, ie don't check for duplicate files.
+.PARAMETER ShowGaps
+	If this command is included then the script will output the gaps between work periods.
+	The default is FALSE, ie don't show the gaps.
 #>
 
 #######################################################################
@@ -16,7 +19,9 @@ function Compute-Daily-Stats {
 		[Parameter()]
 		[int]$DaysAgo,
 		[Parameter()]
-		[switch]$SkipDuplicates = $FALSE
+		[switch]$SkipDuplicates = $FALSE,
+		[Parameter()]
+		[switch]$ShowGaps = $FALSE
 	 )
 
 	# The sub-folder to process.  Defaults to the current date.
@@ -30,17 +35,22 @@ function Compute-Daily-Stats {
 	$FileIndex = 0;
 	$RowIndex  = 0;
 	$DailyWorkTime = New-TimeSpan -Hours 0 -Minutes 0;
+	$DailyGapTime  = New-TimeSpan -Hours 0 -Minutes 0;
 
 	# Colors hashtable
 	$Colors = @{
-		Sat = "Blue"
-		Sun = "Cyan"
+		Sat = "DarkGray"
+		Sun = "DarkGray"
 		Mon = "DarkCyan"
 		Tue = "DarkYellow"
 		Wed = "Green"
 		Thu = "Magenta"
 		Fri = "Red"
 	}
+
+	# ANSI escape codes for underlining text.
+	$UnderlineStart = "$([char]27)[4m"
+	$UnderlineEnd   = "$([char]27)[24m"
 
 	function DeleteLoneArchiveFolders {
 
@@ -126,6 +136,8 @@ function Compute-Daily-Stats {
 
 				$LastFile = $ThisFile
 
+				$LastWorkedFile = ""
+
 			} else {
 
 				Write-Information ("T.utc={0} T={1} S={2} L={3}" `
@@ -141,19 +153,42 @@ function Compute-Daily-Stats {
 
 					if ($WorkTimeDiff.TotalMinutes -ge $WorkLimit) {
 
-						$DailyWorkTime += $WorkTimeDiff
-
-						#Output a line showing the timespan, the hours worked, and minutes worked.
-						# $WorkTimeStringHours   = [math]::Round($WorkTimeDiff.TotalHours, 1)
-						# $WorkTimeStringMinutes = [math]::Round($WorkTimeDiff.TotalMinutes)
-						$StartString    = $StartWork.CreationTime.ToShortTimeString().ToLower()
-						$FinishString   = $LastFile.CreationTime.ToShortTimeString().ToLower()
 
 						$RowIndex += 1
 						$Prefix = "    "
 						if ($RowIndex -eq 1) {
 							$Prefix = $DayFormat + ":"
 						}
+
+						# When ShowGaps is true, a breakdown of the gaps between work periods is shown.
+						# This is useful for identifying when you're not working, and for how long.
+						if ($ShowGaps) {
+							# Skip the first gap (when LastWorkedFile == ""), as it's not really a gap.
+							if ($LastWorkedFile -ne "") {
+
+								# Compute the stats for the gap.
+								$StartString   = $LastWorkedFile.CreationTime.ToShortTimeString().ToLower()
+								$FinishString  = $StartWork.CreationTime.ToShortTimeString().ToLower()
+								$GapTimeDiff   = $StartWork.CreationTimeUtc - $LastWorkedFile.CreationTimeUtc
+								$DailyGapTime += $GapTimeDiff
+
+								# Output a line showing the timespan and hours/minutes of the gap.
+								Write-Host $Prefix -NoNewline -ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
+								Write-Host ("Gap:   {0} - {1}: {2} hours {3} minutes)" -f `
+										$StartString.PadLeft(8),  `
+										$FinishString.PadLeft(8), `
+										$GapTimeDiff.TotalHours.ToString("0.0").PadLeft(4),  `
+										$GapTimeDiff.TotalMinutes.ToString("(0").PadLeft(5)) `
+										-ForegroundColor DarkGray
+							}
+						}
+
+						# Compute the stats for the work period.
+						$StartString    = $StartWork.CreationTime.ToShortTimeString().ToLower()
+						$FinishString   = $LastFile.CreationTime.ToShortTimeString().ToLower()
+						$DailyWorkTime += $WorkTimeDiff
+
+						# Output a line showing the timespan and hours/minutes worked.
 						Write-Host $Prefix -NoNewline -ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
 						Write-Host ("       {0} - {1}: {2} hours {3} minutes)" -f `
 								#$Prefix, `
@@ -161,7 +196,10 @@ function Compute-Daily-Stats {
 								$FinishString.PadLeft(8), `
 								$WorkTimeDiff.TotalHours.ToString("0.0").PadLeft(4),  `
 								$WorkTimeDiff.TotalMinutes.ToString("(0").PadLeft(5)) `
-								-ForegroundColor Gray
+								-ForegroundColor White
+
+						# We're starting a gap, so record the last file we worked on, ie the start of the gap.
+						$LastWorkedFile = $LastFile
 
 					}
 
@@ -181,11 +219,39 @@ function Compute-Daily-Stats {
 
 	}
 
-	Write-Host ("Total worked on {0}: {1} hours {2} minutes)" `
-			-f "$DayFormat $ThisDay", $DailyWorkTime.TotalHours.ToString("0.0").PadLeft(4), `
-			$DailyWorkTime.TotalMinutes.ToString("(0").PadLeft(5)) `
+	# The last line should be underlined.  If we're not showing gaps then we'll need to underline the total worked line.
+	if ($ShowGaps) {
+		# Don't underline text.
+		$Preformat  = ""
+		$Postformat = ""
+	} else {
+		# Underline text.
+		$Preformat  = $UnderlineStart
+		$Postformat = $UnderlineEnd
+	}
+
+	# Output the total worked for the day.
+	Write-Host ("{0}Total worked on {1}: {2} hours {3} minutes){4}" `
+			-f $Preformat, `
+			"$DayFormat $ThisDay", `
+			$DailyWorkTime.TotalHours.ToString("0.0").PadLeft(4), `
+			$DailyWorkTime.TotalMinutes.ToString("(0").PadLeft(5), `
+			$Postformat) `
 			-ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
 
-	Return $DailyWorkTime
+	# If we're showing gaps then output the total gap time for the day.
+	if ($ShowGaps) {
+		$Preformat  = $UnderlineStart
+		$Postformat = $UnderlineEnd
+		Write-Host ("{0}Total gaps:                     {1} hours {2} minutes{3})" `
+				-f $Preformat, `
+				# "$DayFormat $ThisDay",
+				$DailyGapTime.TotalHours.ToString("0.0").PadLeft(4), `
+				$DailyGapTime.TotalMinutes.ToString("(0").PadLeft(5), `
+				$Postformat) `
+				-ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
+	}
+
+	Return $DailyWorkTime, $DailyGapTime
 
 }
