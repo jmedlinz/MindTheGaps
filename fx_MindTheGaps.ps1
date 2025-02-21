@@ -230,7 +230,7 @@ function Compute-Daily-Stats {
 		$Postformat = $UnderlineEnd
 	}
 
-	# Output the total worked for the day.
+	# Output the hours worked for the day.
 	Write-Host ("{0}Total worked on {1}: {2} hours {3} minutes){4}" `
 			-f $Preformat, `
 			"$DayFormat $ThisDay", `
@@ -239,15 +239,23 @@ function Compute-Daily-Stats {
 			$Postformat) `
 			-ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
 
-	# If we're showing gaps then output the total gap time for the day.
+	# If we're showing gaps then output the gap time for the day and the total time spent.
 	if ($ShowGaps) {
+
+		Write-Host ("Total gaps:                     {0} hours {1} minutes)" `
+				-f `
+				$DailyGapTime.TotalHours.ToString("0.0").PadLeft(4), `
+				$DailyGapTime.TotalMinutes.ToString("(0").PadLeft(5)) `
+				-ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
+
+		$TotalTime = $DailyWorkTime + $DailyGapTime
+
 		$Preformat  = $UnderlineStart
 		$Postformat = $UnderlineEnd
-		Write-Host ("{0}Total gaps:                     {1} hours {2} minutes{3})" `
+		Write-Host ("{0}Total spent:                    {1} hours {2} minutes{3})" `
 				-f $Preformat, `
-				# "$DayFormat $ThisDay",
-				$DailyGapTime.TotalHours.ToString("0.0").PadLeft(4), `
-				$DailyGapTime.TotalMinutes.ToString("(0").PadLeft(5), `
+				$TotalTime.TotalHours.ToString("0.0").PadLeft(4), `
+				$TotalTime.TotalMinutes.ToString("(0").PadLeft(5), `
 				$Postformat) `
 				-ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
 	}
