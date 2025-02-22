@@ -94,25 +94,31 @@ for ($DaysBack = $StartDaysAgo; $DaysBack -GE $StopDaysAgo; $DaysBack--) {
 }
 
 # Output the weekly hours worked.
-Write-Host ("`nTotal hours worked this week:   ") -NoNewline -ForegroundColor Black -BackgroundColor White
-Write-Host ("{0} hours {1} minutes)" `
-		-f $WeeklyWorkTime.TotalHours.ToString("0.0").PadLeft(4), `
+Write-Host ("Total hours worked this week:   ") -ForegroundColor Black -BackgroundColor White -NoNewline
+Write-Host-NoBleed ("{0} hours {1} minutes)" -f `
+		$WeeklyWorkTime.TotalHours.ToString("0.0").PadLeft(4), `
 		$WeeklyWorkTime.TotalMinutes.ToString("(0").PadLeft(5))    `
-		-ForegroundColor DarkGreen -BackgroundColor White
+		-ForegroundColor DarkGreen `
+		-BackgroundColor White `
+		-NoNewline
 
 # If we're showing gaps then output the weekly gap hours and the weekly total time spent.
 if ($ShowGaps) {
-	Write-Host ("Total gap hours this week:      ") -NoNewline -ForegroundColor Black -BackgroundColor White
-	Write-Host ("{0} hours {1} minutes)" `
-		-f $WeeklyGapTime.TotalHours.ToString("0.0").PadLeft(4), `
+	Write-Host ("Total gap hours this week:      ") -ForegroundColor Black -BackgroundColor White -NoNewline
+	Write-Host-NoBleed ("{0} hours {1} minutes)" -f `
+		$WeeklyGapTime.TotalHours.ToString("0.0").PadLeft(4), `
 		$WeeklyGapTime.TotalMinutes.ToString("(0").PadLeft(5))    `
-		-ForegroundColor DarkRed -BackgroundColor White
+		-ForegroundColor DarkRed `
+		-BackgroundColor White `
+		-NoNewline
 
 	$WeeklyTotalTime = $WeeklyWorkTime + $WeeklyGapTime
 
 	Write-Host ("Total hours spent this week:    ") -NoNewline -ForegroundColor Black -BackgroundColor White
-	Write-Host ("{0} hours {1} minutes)" `
-		-f $WeeklyTotalTime.TotalHours.ToString("0.0").PadLeft(4), `
+	Write-Host-NoBleed ("{0} hours {1} minutes)" -f `
+		$WeeklyTotalTime.TotalHours.ToString("0.0").PadLeft(4), `
 		$WeeklyTotalTime.TotalMinutes.ToString("(0").PadLeft(5))    `
-		-ForegroundColor DarkMagenta -BackgroundColor White
+		-ForegroundColor DarkMagenta `
+		-BackgroundColor White `
+		-NoNewline
 }

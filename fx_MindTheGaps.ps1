@@ -14,6 +14,9 @@
 
 #######################################################################
 
+# Load the Write-Host-NoBleed function.  It handles the color bleeding issue in the console.
+. .\fx_Write-Host-NoBleed.ps1
+
 function Compute-Daily-Stats {
 	param (
 		[Parameter()]
@@ -37,7 +40,8 @@ function Compute-Daily-Stats {
 	$DailyWorkTime = New-TimeSpan -Hours 0 -Minutes 0;
 	$DailyGapTime  = New-TimeSpan -Hours 0 -Minutes 0;
 
-	# Colors hashtable
+	# These are the colors used to highlight the days of the week.
+	# These values are defined in System.ConsoleColor
 	$Colors = @{
 		Sat = "DarkGray"
 		Sun = "DarkGray"
@@ -231,33 +235,39 @@ function Compute-Daily-Stats {
 	}
 
 	# Output the hours worked for the day.
-	Write-Host ("{0}Total worked on {1}: {2} hours {3} minutes){4}" `
+	Write-Host-NoBleed -Message ("{0}Total worked on {1}: {2} hours {3} minutes){4}" `
 			-f $Preformat, `
 			"$DayFormat $ThisDay", `
 			$DailyWorkTime.TotalHours.ToString("0.0").PadLeft(4), `
 			$DailyWorkTime.TotalMinutes.ToString("(0").PadLeft(5), `
 			$Postformat) `
-			-ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
+			-ForegroundColor Black `
+			-BackgroundColor $Colors[$DayFormat] `
+			-NoNewline
 
 	# If we're showing gaps then output the gap time for the day and the total time spent.
 	if ($ShowGaps) {
 
-		Write-Host ("Total gaps:                     {0} hours {1} minutes)" `
+		Write-Host-NoBleed ("Total gaps:                     {0} hours {1} minutes)" `
 				-f `
 				$DailyGapTime.TotalHours.ToString("0.0").PadLeft(4), `
 				$DailyGapTime.TotalMinutes.ToString("(0").PadLeft(5)) `
-				-ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
+				-ForegroundColor Black `
+				-BackgroundColor $Colors[$DayFormat] `
+				-NoNewline
 
 		$TotalTime = $DailyWorkTime + $DailyGapTime
 
 		$Preformat  = $UnderlineStart
 		$Postformat = $UnderlineEnd
-		Write-Host ("{0}Total spent:                    {1} hours {2} minutes{3})" `
+		Write-Host-NoBleed ("{0}Total spent:                    {1} hours {2} minutes{3})" `
 				-f $Preformat, `
 				$TotalTime.TotalHours.ToString("0.0").PadLeft(4), `
 				$TotalTime.TotalMinutes.ToString("(0").PadLeft(5), `
 				$Postformat) `
-				-ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
+				-ForegroundColor Black `
+				-BackgroundColor $Colors[$DayFormat] `
+				-NoNewline
 	}
 
 	Return $DailyWorkTime, $DailyGapTime
