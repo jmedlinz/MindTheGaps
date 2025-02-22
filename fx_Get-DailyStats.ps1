@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-	The Compute-Daily-Stats function is used internally as the main processing function to extract useful time worked and gap data from a folder of time-based screenshots (for example, TimeSnapper).
+	The Get-DailyStats function is used internally as the main processing function to extract useful time worked and gap data from a folder of time-based screenshots (for example, TimeSnapper).
 .PARAMETER DaysAgo
 	The number of days back from today to process.  So, -1 would use the data from yesterday, and -7 would use the data from a week ago.  Since positive numbers are meaningless here, the sign is ignored: -7 and 7 would both use the data from a week ago.
 .PARAMETER SkipDuplicates
@@ -14,10 +14,10 @@
 
 #######################################################################
 
-# Load the Write-Host-NoBleed function.  It handles the color bleeding issue in the console.
-. .\fx_Write-Host-NoBleed.ps1
+# Load the Write-ConsoleMessage function.  It handles the color bleeding issue in the console.
+. .\fx_Write-ConsoleMessage.ps1
 
-function Compute-Daily-Stats {
+function Get-DailyStats {
 	param (
 		[Parameter()]
 		[int]$DaysAgo,
@@ -235,7 +235,7 @@ function Compute-Daily-Stats {
 	}
 
 	# Output the hours worked for the day.
-	Write-Host-NoBleed -Message ("{0}Total worked on {1}: {2} hours {3} minutes){4}" `
+	Write-ConsoleMessage -Message ("{0}Total worked on {1}: {2} hours {3} minutes){4}" `
 			-f $Preformat, `
 			"$DayFormat $ThisDay", `
 			$DailyWorkTime.TotalHours.ToString("0.0").PadLeft(4), `
@@ -248,7 +248,7 @@ function Compute-Daily-Stats {
 	# If we're showing gaps then output the gap time for the day and the total time spent.
 	if ($ShowGaps) {
 
-		Write-Host-NoBleed ("Total gaps:                     {0} hours {1} minutes)" `
+		Write-ConsoleMessage ("Total gaps:                     {0} hours {1} minutes)" `
 				-f `
 				$DailyGapTime.TotalHours.ToString("0.0").PadLeft(4), `
 				$DailyGapTime.TotalMinutes.ToString("(0").PadLeft(5)) `
@@ -260,7 +260,7 @@ function Compute-Daily-Stats {
 
 		$Preformat  = $UnderlineStart
 		$Postformat = $UnderlineEnd
-		Write-Host-NoBleed ("{0}Total spent:                    {1} hours {2} minutes{3})" `
+		Write-ConsoleMessage ("{0}Total spent:                    {1} hours {2} minutes{3})" `
 				-f $Preformat, `
 				$TotalTime.TotalHours.ToString("0.0").PadLeft(4), `
 				$TotalTime.TotalMinutes.ToString("(0").PadLeft(5), `

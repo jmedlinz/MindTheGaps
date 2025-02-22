@@ -81,13 +81,13 @@ $WeeklyGapTime  = New-TimeSpan -Hours 0 -Minutes 0;
 # Load the constants.
 . .\constants.ps1
 
-# Include Compute-Daily-Stats, the main function to compute the stats for a day.
-. .\fx_MindTheGaps.ps1
+# Include Get-DailyStats, the main function to compute the stats for a day.
+. .\fx_Get-DailyStats.ps1
 
 # Compute this week's stats.
 for ($DaysBack = $StartDaysAgo; $DaysBack -GE $StopDaysAgo; $DaysBack--) {
 
-	$DailyWorkTime, $DailyGapTime = Compute-Daily-Stats $DaysBack -SkipDuplicates:$SkipDuplicates -ShowGaps:$ShowGaps
+	$DailyWorkTime, $DailyGapTime = Get-DailyStats $DaysBack -SkipDuplicates:$SkipDuplicates -ShowGaps:$ShowGaps
 
 	$WeeklyWorkTime += $DailyWorkTime
 	$WeeklyGapTime  += $DailyGapTime
@@ -95,7 +95,7 @@ for ($DaysBack = $StartDaysAgo; $DaysBack -GE $StopDaysAgo; $DaysBack--) {
 
 # Output the weekly hours worked.
 Write-Host ("Total hours worked this week:   ") -ForegroundColor Black -BackgroundColor White -NoNewline
-Write-Host-NoBleed ("{0} hours {1} minutes)" -f `
+Write-ConsoleMessage ("{0} hours {1} minutes)" -f `
 		$WeeklyWorkTime.TotalHours.ToString("0.0").PadLeft(4), `
 		$WeeklyWorkTime.TotalMinutes.ToString("(0").PadLeft(5))    `
 		-ForegroundColor DarkGreen `
@@ -105,7 +105,7 @@ Write-Host-NoBleed ("{0} hours {1} minutes)" -f `
 # If we're showing gaps then output the weekly gap hours and the weekly total time spent.
 if ($ShowGaps) {
 	Write-Host ("Total gap hours this week:      ") -ForegroundColor Black -BackgroundColor White -NoNewline
-	Write-Host-NoBleed ("{0} hours {1} minutes)" -f `
+	Write-ConsoleMessage ("{0} hours {1} minutes)" -f `
 		$WeeklyGapTime.TotalHours.ToString("0.0").PadLeft(4), `
 		$WeeklyGapTime.TotalMinutes.ToString("(0").PadLeft(5))    `
 		-ForegroundColor DarkRed `
@@ -115,7 +115,7 @@ if ($ShowGaps) {
 	$WeeklyTotalTime = $WeeklyWorkTime + $WeeklyGapTime
 
 	Write-Host ("Total hours spent this week:    ") -NoNewline -ForegroundColor Black -BackgroundColor White
-	Write-Host-NoBleed ("{0} hours {1} minutes)" -f `
+	Write-ConsoleMessage ("{0} hours {1} minutes)" -f `
 		$WeeklyTotalTime.TotalHours.ToString("0.0").PadLeft(4), `
 		$WeeklyTotalTime.TotalMinutes.ToString("(0").PadLeft(5))    `
 		-ForegroundColor DarkMagenta `

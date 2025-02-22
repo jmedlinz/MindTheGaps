@@ -61,8 +61,8 @@ $DaysBack = [math]::Abs($DaysBack)
 # Load the constants.
 . .\constants.ps1
 
-# Include Compute-Daily-Stats, the main function to compute the stats for a day.
-. .\fx_MindTheGaps.ps1
+# Include Get-DailyStats, the main function to compute the stats for a day.
+. .\fx_Get-DailyStats.ps1
 
 # Compute this day's stats.
-Compute-Daily-Stats $DaysBack -SkipDuplicates:$SkipDuplicates -ShowGaps:$ShowGaps | Out-Null
+Get-DailyStats $DaysBack -SkipDuplicates:$SkipDuplicates -ShowGaps:$ShowGaps | Out-Null
