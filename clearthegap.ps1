@@ -25,6 +25,16 @@
         J:\Snapshots\2019-12-27\cleared-10.00.01.0000.jpg
 
 .EXAMPLE
+	.\clearthegap.ps1 9:30am 10am
+
+	Same as above but using shorthand time format (no minutes specified for end time):
+        J:\Snapshots\2019-12-27\cleared-09.30.00.0000.jpg
+        J:\Snapshots\2019-12-27\cleared-09.35.00.0000.jpg
+        ...
+        J:\Snapshots\2019-12-27\cleared-10.00.00.0000.jpg
+        J:\Snapshots\2019-12-27\cleared-10.00.01.0000.jpg
+
+.EXAMPLE
 	.\clearthegap.ps1 9:30pm 10:00pm -1
 
     Will rename the subset of files in yesterday's folder.  The value can be specified as either a positive or negative 1, but it will target a previous folder either way.
@@ -40,21 +50,25 @@
         J:\Snapshots\2019-12-26\cleared-22.00.01.0000.jpg
 
 .PARAMETER StartTime
-    The time to start the file rename, ie the start of the gap.  The format is hh:mmtt.
+    The time to start the file rename, ie the start of the gap.  The format can be hh:mmtt or htt (shorthand).
     Valid values:
         10:30am
         9:00pm
+        8pm
+        12am
     Invalid values:
         10:30 am
-        9pm
+        9 pm
 .PARAMETER StopTime
-    The time to stop the file rename, ie the end of the gap .  The format is hh:mmtt.
+    The time to stop the file rename, ie the end of the gap.  The format can be hh:mmtt or htt (shorthand).
     Valid values:
         10:30am
         9:00pm
+        8pm
+        12am
     Invalid values:
         10:30 am
-        9pm
+        9 pm
 .PARAMETER DaysBack
 	The number of days back from today to process.  So, -1 would use the data from yesterday, and -7 would use the data from a week ago.  Since positive numbers are meaningless here, the sign is ignored: -7 and 7 would both use the data from a week ago.
 	The default is today, ie 0.
@@ -79,6 +93,9 @@ $DaysBack = [math]::Abs($DaysBack)
  # Load the common constants.
 . ".\constants.ps1"
 
+# Load the time parsing function.
+. ".\fx_ConvertFrom-TimeString.ps1"
+
 # Write a status every nth file.  Gap = Nth.
 $Gap = 25
 
@@ -95,8 +112,8 @@ $FileIndex = 0;
 
 # Test the params by converting the date strings to datetime-type variables.
 try {
-    $WorkStart = ([datetime]::parseexact($StartTime, 'h:mmtt', $null)).AddDays(-$DaysBack)
-    $WorkStop  = ([datetime]::parseexact($StopTime,  'h:mmtt', $null)).AddDays(-$DaysBack)
+    $WorkStart = (ConvertFrom-TimeString $StartTime).AddDays(-$DaysBack)
+    $WorkStop  = (ConvertFrom-TimeString $StopTime).AddDays(-$DaysBack)
 }
 catch {
     Write-Host ""
@@ -105,6 +122,7 @@ catch {
     Write-Host "Valid values must be supplied for the StartTime and StopTime parameters."
     Write-Host "For example:"
     Write-Host "   clearthegap 9:30am 10:00am"
+    Write-Host "   clearthegap 9:30am 10am"
     Write-Host "This command would clear any files dated between 9:30 and 10am."
     Write-Host ""
     Exit
