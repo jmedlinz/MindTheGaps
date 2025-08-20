@@ -37,6 +37,16 @@
         Created J:\Snapshots\2019-12-27\filled-10.00.01.0000.jpg
 
 .EXAMPLE
+	.\fillthegap.ps1 8a 9p
+
+	Using ultra-short format for both start and end times:
+        Created J:\Snapshots\2019-12-27\filled-08.00.00.0000.jpg
+        Created J:\Snapshots\2019-12-27\filled-08.05.00.0000.jpg
+        ...
+        Created J:\Snapshots\2019-12-27\filled-21.00.00.0000.jpg
+        Created J:\Snapshots\2019-12-27\filled-21.00.01.0000.jpg
+
+.EXAMPLE
 	.\fillthegap.ps1 9:30pm 10:00pm -1
 
     Will create the files in yesterday's folder.  The value can be specified as either a positive or negative 1, but it will target a previous folder either way.
@@ -52,25 +62,33 @@
         Created J:\Snapshots\2019-12-26\filled-22.00.01.0000.jpg
 
 .PARAMETER StartTime
-    The time to start the file creation, ie the start of the gap or meeting.  The format can be hh:mmtt or htt (shorthand).
+    The time to start the file creation, ie the start of the gap or meeting.  Supports multiple time formats.
     Valid values:
-        10:30am
-        9:00pm
-        8pm
-        12am
+        10:30am (full format)
+        9:00pm (full format)
+        8pm (short format)
+        12am (short format)
+        8:01a (abbreviated format)
+        5:55p (abbreviated format)
+        8a (ultra-short format)
+        5p (ultra-short format)
     Invalid values:
-        10:30 am
-        9 pm
+        10:30 am (space before am/pm)
+        9 pm (space before am/pm)
 .PARAMETER StopTime
-    The time to stop the file creation, ie the end of the gap or meeting.  The format can be hh:mmtt or htt (shorthand).
+    The time to stop the file creation, ie the end of the gap or meeting.  Supports multiple time formats.
     Valid values:
-        10:30am
-        9:00pm
-        8pm
-        12am
+        10:30am (full format)
+        9:00pm (full format)
+        8pm (short format)
+        12am (short format)
+        8:01a (abbreviated format)
+        5:55p (abbreviated format)
+        8a (ultra-short format)
+        5p (ultra-short format)
     Invalid values:
-        10:30 am
-        9 pm
+        10:30 am (space before am/pm)
+        9 pm (space before am/pm)
 .PARAMETER DaysBack
 	The number of days back from today to process.  So, -1 would use the data from yesterday, and -7 would use the data from a week ago.  Since positive numbers are meaningless here, the sign is ignored: -7 and 7 would both use the data from a week ago.
 	The default is today, ie 0.
@@ -152,6 +170,7 @@ catch {
     Write-Host "For example:"
     Write-Host "   fillthegap 9:30am 10:00am"
     Write-Host "   fillthegap 9:30am 10am"
+    Write-Host "   fillthegap 9:30a 10a"
     Write-Host "This command would create several new files dated between 9:30 and 10am."
     Write-Host ""
     Exit
