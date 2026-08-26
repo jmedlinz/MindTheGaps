@@ -37,6 +37,8 @@ function Get-DailyStats {
 
 	$FileIndex = 0;
 	$RowIndex  = 0;
+	$PngFooterPad = ""
+	$PngSummaryLabelWidth = 31
 	$DailyWorkTime = New-TimeSpan -Hours 0 -Minutes 0;
 	$DailyGapTime  = New-TimeSpan -Hours 0 -Minutes 0;
 
@@ -55,6 +57,7 @@ function Get-DailyStats {
 	# ANSI escape codes for underlining text.
 	$UnderlineStart = "$([char]27)[4m"
 	$UnderlineEnd   = "$([char]27)[24m"
+	$CanCaptureRows = $null -ne (Get-Command Add-WeeklyPngRow -ErrorAction SilentlyContinue)
 
 	function DeleteLoneArchiveFolders {
 
@@ -175,14 +178,22 @@ function Get-DailyStats {
 								$FinishString  = $StartWork.CreationTime.ToShortTimeString().ToLower()
 								$GapTimeDiff   = $StartWork.CreationTimeUtc - $LastWorkedFile.CreationTimeUtc
 								$DailyGapTime += $GapTimeDiff
-
-								# Output a line showing the timespan and hours/minutes of the gap.
-								Write-Host $Prefix -NoNewline -ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
-								Write-Host ("Gap:   {0} - {1}: {2} hours {3} minutes)" -f `
+								$GapLine = ("Gap:   {0} - {1}: {2} hours {3} minutes)" -f `
 										$StartString.PadLeft(8),  `
 										$FinishString.PadLeft(8), `
 										$GapTimeDiff.TotalHours.ToString("0.0").PadLeft(4),  `
-										$GapTimeDiff.TotalMinutes.ToString("(0").PadLeft(5)) `
+										$GapTimeDiff.TotalMinutes.ToString("(0").PadLeft(5))
+
+								if ($CanCaptureRows) {
+									Add-WeeklyPngRow -Segments @(
+										[pscustomobject]@{ Text = $Prefix; ForegroundColor = "Black"; BackgroundColor = $Colors[$DayFormat] }
+										[pscustomobject]@{ Text = $GapLine; ForegroundColor = "DarkGray"; BackgroundColor = "Black" }
+									)
+								}
+
+								# Output a line showing the timespan and hours/minutes of the gap.
+								Write-Host $Prefix -NoNewline -ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
+								Write-Host $GapLine `
 										-ForegroundColor DarkGray
 							}
 						}
@@ -191,15 +202,22 @@ function Get-DailyStats {
 						$StartString    = $StartWork.CreationTime.ToShortTimeString().ToLower()
 						$FinishString   = $LastFile.CreationTime.ToShortTimeString().ToLower()
 						$DailyWorkTime += $WorkTimeDiff
-
-						# Output a line showing the timespan and hours/minutes worked.
-						Write-Host $Prefix -NoNewline -ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
-						Write-Host ("       {0} - {1}: {2} hours {3} minutes)" -f `
-								#$Prefix, `
+						$WorkLine = ("       {0} - {1}: {2} hours {3} minutes)" -f `
 								$StartString.PadLeft(8),  `
 								$FinishString.PadLeft(8), `
 								$WorkTimeDiff.TotalHours.ToString("0.0").PadLeft(4),  `
-								$WorkTimeDiff.TotalMinutes.ToString("(0").PadLeft(5)) `
+								$WorkTimeDiff.TotalMinutes.ToString("(0").PadLeft(5))
+
+						if ($CanCaptureRows) {
+							Add-WeeklyPngRow -Segments @(
+								[pscustomobject]@{ Text = $Prefix; ForegroundColor = "Black"; BackgroundColor = $Colors[$DayFormat] }
+								[pscustomobject]@{ Text = $WorkLine; ForegroundColor = "White"; BackgroundColor = "Black" }
+							)
+						}
+
+						# Output a line showing the timespan and hours/minutes worked.
+						Write-Host $Prefix -NoNewline -ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
+						Write-Host $WorkLine `
 								-ForegroundColor White
 
 						# We're starting a gap, so record the last file we worked on, ie the start of the gap.
@@ -235,6 +253,24 @@ function Get-DailyStats {
 	}
 
 	# Output the hours worked for the day.
+	$DailyWorkedLabel = ("Total worked on {0}:" -f "$DayFormat $ThisDay").PadRight($PngSummaryLabelWidth)
+	$DailyWorkedDetail = ("{0} hours {1} minutes){2}" -f `
+			$DailyWorkTime.TotalHours.ToString("0.0").PadLeft(4), `
+			$DailyWorkTime.TotalMinutes.ToString("(0").PadLeft(5), `
+			$PngFooterPad)
+
+	$DailyWorkedLine = ("Total worked on {0}: {1} hours {2} minutes)" -f `
+			"$DayFormat $ThisDay", `
+			$DailyWorkTime.TotalHours.ToString("0.0").PadLeft(4), `
+			$DailyWorkTime.TotalMinutes.ToString("(0").PadLeft(5))
+
+	if ($CanCaptureRows) {
+		Add-WeeklyPngRow -Segments @(
+			[pscustomobject]@{ Text = $DailyWorkedLabel; ForegroundColor = "Black"; BackgroundColor = $Colors[$DayFormat] }
+			[pscustomobject]@{ Text = $DailyWorkedDetail; ForegroundColor = "Black"; BackgroundColor = $Colors[$DayFormat] }
+		) -Underline:(-not $ShowGaps)
+	}
+
 	Write-ConsoleMessage -Message ("{0}Total worked on {1}: {2} hours {3} minutes){4}" `
 			-f $Preformat, `
 			"$DayFormat $ThisDay", `
@@ -247,20 +283,48 @@ function Get-DailyStats {
 
 	# If we're showing gaps then output the gap time for the day and the total time spent.
 	if ($ShowGaps) {
-
-		Write-ConsoleMessage ("Total gaps:                     {0} hours {1} minutes)" `
-				-f `
+		$DailyGapLabel = "Total gaps:".PadRight($PngSummaryLabelWidth)
+		$DailyGapDetail = ("{0} hours {1} minutes){2}" -f `
 				$DailyGapTime.TotalHours.ToString("0.0").PadLeft(4), `
-				$DailyGapTime.TotalMinutes.ToString("(0").PadLeft(5)) `
+				$DailyGapTime.TotalMinutes.ToString("(0").PadLeft(5), `
+				$PngFooterPad)
+
+		$DailyGapLine = ("Total gaps:                     {0} hours {1} minutes)" -f `
+				$DailyGapTime.TotalHours.ToString("0.0").PadLeft(4), `
+				$DailyGapTime.TotalMinutes.ToString("(0").PadLeft(5))
+
+		if ($CanCaptureRows) {
+			Add-WeeklyPngRow -Segments @(
+				[pscustomobject]@{ Text = $DailyGapLabel; ForegroundColor = "Black"; BackgroundColor = $Colors[$DayFormat] }
+				[pscustomobject]@{ Text = $DailyGapDetail; ForegroundColor = "Black"; BackgroundColor = $Colors[$DayFormat] }
+			)
+		}
+
+		Write-ConsoleMessage $DailyGapLine `
 				-ForegroundColor Black `
 				-BackgroundColor $Colors[$DayFormat] `
 				-NoNewline
 
 		$TotalTime = $DailyWorkTime + $DailyGapTime
+		$DailyTotalLabel = "Total spent:".PadRight($PngSummaryLabelWidth)
+		$DailyTotalDetail = ("{0} hours {1} minutes){2}" -f `
+				$TotalTime.TotalHours.ToString("0.0").PadLeft(4), `
+				$TotalTime.TotalMinutes.ToString("(0").PadLeft(5), `
+				$PngFooterPad)
+		$DailyTotalLine = ("Total spent:                    {0} hours {1} minutes)" -f `
+				$TotalTime.TotalHours.ToString("0.0").PadLeft(4), `
+				$TotalTime.TotalMinutes.ToString("(0").PadLeft(5))
+
+		if ($CanCaptureRows) {
+			Add-WeeklyPngRow -Segments @(
+				[pscustomobject]@{ Text = $DailyTotalLabel; ForegroundColor = "Black"; BackgroundColor = $Colors[$DayFormat] }
+				[pscustomobject]@{ Text = $DailyTotalDetail; ForegroundColor = "Black"; BackgroundColor = $Colors[$DayFormat] }
+			) -Underline
+		}
 
 		$Preformat  = $UnderlineStart
 		$Postformat = $UnderlineEnd
-		Write-ConsoleMessage ("{0}Total spent:                    {1} hours {2} minutes{3})" `
+		Write-ConsoleMessage ("{0}Total spent:                    {1} hours {2} minutes){3}" `
 				-f $Preformat, `
 				$TotalTime.TotalHours.ToString("0.0").PadLeft(4), `
 				$TotalTime.TotalMinutes.ToString("(0").PadLeft(5), `

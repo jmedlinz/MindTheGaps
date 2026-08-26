@@ -31,6 +31,7 @@ By default the script will show gaps between the work sessions. This can be usef
 ### WeeklyGaps
 Runs the *MindTheGaps* script for each day of the week and summarizes the results. This script will also show the total hours worked for the week.
 By default, gaps are not shown in the weekly summary. This can be changed with the `-ShowGaps` switch.
+By default, weekly image export is disabled. Use `-ExportWeeklyImage` to generate a weekly summary image.
 
 Example usage:
 ```powershell
@@ -38,10 +39,20 @@ Example usage:
 .\weeklygaps.ps1 -1 -ShowGaps
 ```
 
+Weekly image output:
+
+- Output format: `png`
+- Output folder: `archive/`
+- File naming: `mtg_weekly_YYYYMMDD.png` (example: `mtg_weekly_20260821.png`)
+- Date stamp: Uses the week-ending date for the processed week (`Friday` for prior full weeks, or `today` when running the current partial week)
+- Existing files for the same date are overwritten
+- Export control: Generated only when `-ExportWeeklyImage` is included
+
 #### Parameters
 
 - `-WeeksBack`: Number of weeks back to process. `-1` means last week; positive values are normalized to their absolute value.
 - `-ShowGaps`: Includes the gaps between work periods in the weekly summary.
+- `-ExportWeeklyImage`: Exports the weekly summary image to `archive/` using the `mtg_weekly_YYYYMMDD.png` naming format.
 - `-SkipDuplicates`: Same duplicate-image filtering behavior as the daily script.
 
   > Beta feature warning: `-SkipDuplicates` is considered beta-quality. It can be inconsistent depending on image quality, and results should not be trusted.

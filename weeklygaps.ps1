@@ -43,6 +43,10 @@
 	.\weeklygaps.ps1 -WeeksBack -2 -SkipDuplicates
 
 	Will analyze data from two weeks ago, and will skip any duplicate files during the analysis.
+.EXAMPLE
+	.\weeklygaps.ps1 -WeeksBack -1 -ExportWeeklyImage
+
+	Will analyze last week and export the weekly summary image to the archive folder.
 .PARAMETER WeeksBack
 	The number of weeks back from today to process.  So, -1 would use the data from last week.  Since positive numbers are meaningless here, the sign is ignored: -1 and 1 would both use the data from a week ago.
 	For the current week, the week starts on Saturday and ends on the current day.  For previous weeks, it starts on Saturday and ends on Friday.
@@ -54,6 +58,9 @@
 .PARAMETER ShowGaps
 	If this command is included then the script will output the gaps between work periods.
 	The default is FALSE, ie don't show the gaps.
+.PARAMETER ExportWeeklyImage
+	If this command is included then the script will export the weekly summary image to the archive folder.
+	The default is FALSE, ie don't create an image.
 #>
 
 #######################################################################
@@ -61,7 +68,8 @@
 param (
 	[int]$WeeksBack = 0,
 	[switch]$SkipDuplicates = $FALSE,
-	[switch]$ShowGaps = $FALSE
+	[switch]$ShowGaps = $FALSE,
+	[switch]$ExportWeeklyImage = $FALSE
 )
 
 $WeeksBack = [math]::Abs($WeeksBack)
@@ -81,6 +89,12 @@ $WeeklyGapTime  = New-TimeSpan -Hours 0 -Minutes 0;
 # Load the constants.
 . .\constants.ps1
 
+# Include PNG export helpers only when image export is requested.
+if ($ExportWeeklyImage) {
+	. .\fx_Export-WeeklyPng.ps1
+	$script:WeeklyPngRows = @()
+}
+
 # Include Get-DailyStats, the main function to compute the stats for a day.
 . .\fx_Get-DailyStats.ps1
 
@@ -94,7 +108,21 @@ for ($DaysBack = $StartDaysAgo; $DaysBack -GE $StopDaysAgo; $DaysBack--) {
 }
 
 # Output the weekly hours worked.
-Write-Host ("Total hours worked this week:   ") -ForegroundColor Black -BackgroundColor White -NoNewline
+$SummaryLabelWidth = 31
+$WeeklyWorkedLabel = "Total hours worked this week:".PadRight($SummaryLabelWidth)
+$WeeklyWorkedLabelConsole = "Total hours worked this week:   "
+$WeeklyWorkedDetail = ("{0} hours {1} minutes)" -f `
+		$WeeklyWorkTime.TotalHours.ToString("0.0").PadLeft(4), `
+		$WeeklyWorkTime.TotalMinutes.ToString("(0").PadLeft(5))
+
+if ($ExportWeeklyImage) {
+	Add-WeeklyPngRow -Segments @(
+		[pscustomobject]@{ Text = $WeeklyWorkedLabel; ForegroundColor = "Black"; BackgroundColor = "White" }
+		[pscustomobject]@{ Text = $WeeklyWorkedDetail; ForegroundColor = "DarkGreen"; BackgroundColor = "White" }
+	) -Underline:(-not $ShowGaps)
+}
+
+Write-Host $WeeklyWorkedLabelConsole -ForegroundColor Black -BackgroundColor White -NoNewline
 Write-ConsoleMessage ("{0} hours {1} minutes)" -f `
 		$WeeklyWorkTime.TotalHours.ToString("0.0").PadLeft(4), `
 		$WeeklyWorkTime.TotalMinutes.ToString("(0").PadLeft(5))    `
@@ -104,6 +132,18 @@ Write-ConsoleMessage ("{0} hours {1} minutes)" -f `
 
 # If we're showing gaps then output the weekly gap hours and the weekly total time spent.
 if ($ShowGaps) {
+	$WeeklyGapLabel = "Total gap hours this week:      "
+	$WeeklyGapDetail = ("{0} hours {1} minutes)" -f `
+		$WeeklyGapTime.TotalHours.ToString("0.0").PadLeft(4), `
+		$WeeklyGapTime.TotalMinutes.ToString("(0").PadLeft(5))
+
+	if ($ExportWeeklyImage) {
+		Add-WeeklyPngRow -Segments @(
+			[pscustomobject]@{ Text = $WeeklyGapLabel; ForegroundColor = "Black"; BackgroundColor = "White" }
+			[pscustomobject]@{ Text = $WeeklyGapDetail; ForegroundColor = "DarkRed"; BackgroundColor = "White" }
+		)
+	}
+
 	Write-Host ("Total gap hours this week:      ") -ForegroundColor Black -BackgroundColor White -NoNewline
 	Write-ConsoleMessage ("{0} hours {1} minutes)" -f `
 		$WeeklyGapTime.TotalHours.ToString("0.0").PadLeft(4), `
@@ -113,6 +153,17 @@ if ($ShowGaps) {
 		-NoNewline
 
 	$WeeklyTotalTime = $WeeklyWorkTime + $WeeklyGapTime
+	$WeeklySpentLabel = "Total hours spent this week:    "
+	$WeeklySpentDetail = ("{0} hours {1} minutes)" -f `
+		$WeeklyTotalTime.TotalHours.ToString("0.0").PadLeft(4), `
+		$WeeklyTotalTime.TotalMinutes.ToString("(0").PadLeft(5))
+
+	if ($ExportWeeklyImage) {
+		Add-WeeklyPngRow -Segments @(
+			[pscustomobject]@{ Text = $WeeklySpentLabel; ForegroundColor = "Black"; BackgroundColor = "White" }
+			[pscustomobject]@{ Text = $WeeklySpentDetail; ForegroundColor = "DarkMagenta"; BackgroundColor = "White" }
+		) -Underline
+	}
 
 	Write-Host ("Total hours spent this week:    ") -NoNewline -ForegroundColor Black -BackgroundColor White
 	Write-ConsoleMessage ("{0} hours {1} minutes)" -f `
@@ -121,4 +172,17 @@ if ($ShowGaps) {
 		-ForegroundColor DarkMagenta `
 		-BackgroundColor White `
 		-NoNewline
+}
+
+if ($ExportWeeklyImage) {
+	try {
+		$ArchiveFolder = Join-Path -Path $PSScriptRoot -ChildPath "archive"
+		$WeekEndingStamp = (Get-Date).AddDays(-$StopDaysAgo).ToString("yyyyMMdd")
+		$ImagePath = Join-Path -Path $ArchiveFolder -ChildPath ("mtg_weekly_{0}.png" -f $WeekEndingStamp)
+
+		Export-WeeklyPng -Rows (Get-WeeklyPngRows) -OutputPath $ImagePath
+		Write-Host ("Weekly PNG saved: {0}" -f $ImagePath) -ForegroundColor DarkGray
+	} catch {
+		Write-Warning ("Could not export weekly PNG: {0}" -f $_.Exception.Message)
+	}
 }

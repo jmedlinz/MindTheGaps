@@ -2,3 +2,5 @@ out.txt
 test.ps1
 
 create_old_archive_folders.ps1
+
+archive/
