@@ -101,7 +101,7 @@ if ($ExportWeeklyImage) {
 # Compute this week's stats.
 for ($DaysBack = $StartDaysAgo; $DaysBack -GE $StopDaysAgo; $DaysBack--) {
 
-	$DailyWorkTime, $DailyGapTime = Get-DailyStats $DaysBack -SkipDuplicates:$SkipDuplicates -ShowGaps:$ShowGaps
+	$DailyWorkTime, $DailyGapTime = Get-DailyStats $DaysBack -SkipDuplicates:$SkipDuplicates -ShowGaps:$ShowGaps -SummaryOnly:$ExportWeeklyImage
 
 	$WeeklyWorkTime += $DailyWorkTime
 	$WeeklyGapTime  += $DailyGapTime
@@ -144,13 +144,15 @@ if ($ShowGaps) {
 		)
 	}
 
-	Write-Host ("Total gap hours this week:      ") -ForegroundColor Black -BackgroundColor White -NoNewline
-	Write-ConsoleMessage ("{0} hours {1} minutes)" -f `
-		$WeeklyGapTime.TotalHours.ToString("0.0").PadLeft(4), `
-		$WeeklyGapTime.TotalMinutes.ToString("(0").PadLeft(5))    `
-		-ForegroundColor DarkRed `
-		-BackgroundColor White `
-		-NoNewline
+	if (-not $ExportWeeklyImage) {
+		Write-Host ("Total gap hours this week:      ") -ForegroundColor Black -BackgroundColor White -NoNewline
+		Write-ConsoleMessage ("{0} hours {1} minutes)" -f `
+			$WeeklyGapTime.TotalHours.ToString("0.0").PadLeft(4), `
+			$WeeklyGapTime.TotalMinutes.ToString("(0").PadLeft(5))    `
+			-ForegroundColor DarkRed `
+			-BackgroundColor White `
+			-NoNewline
+	}
 
 	$WeeklyTotalTime = $WeeklyWorkTime + $WeeklyGapTime
 	$WeeklySpentLabel = "Total hours spent this week:    "
@@ -165,13 +167,15 @@ if ($ShowGaps) {
 		) -Underline
 	}
 
-	Write-Host ("Total hours spent this week:    ") -NoNewline -ForegroundColor Black -BackgroundColor White
-	Write-ConsoleMessage ("{0} hours {1} minutes)" -f `
-		$WeeklyTotalTime.TotalHours.ToString("0.0").PadLeft(4), `
-		$WeeklyTotalTime.TotalMinutes.ToString("(0").PadLeft(5))    `
-		-ForegroundColor DarkMagenta `
-		-BackgroundColor White `
-		-NoNewline
+	if (-not $ExportWeeklyImage) {
+		Write-Host ("Total hours spent this week:    ") -NoNewline -ForegroundColor Black -BackgroundColor White
+		Write-ConsoleMessage ("{0} hours {1} minutes)" -f `
+			$WeeklyTotalTime.TotalHours.ToString("0.0").PadLeft(4), `
+			$WeeklyTotalTime.TotalMinutes.ToString("(0").PadLeft(5))    `
+			-ForegroundColor DarkMagenta `
+			-BackgroundColor White `
+			-NoNewline
+	}
 }
 
 if ($ExportWeeklyImage) {

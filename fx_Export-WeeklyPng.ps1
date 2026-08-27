@@ -143,11 +143,13 @@ function Export-WeeklyPng {
 
     Add-Type -AssemblyName System.Drawing
 
-    $font = Get-ReportFont -Size 14
+    $renderScale = 0.8
+    $font = Get-ReportFont -Size (14 * $renderScale)
     $paddingX = 0
     $paddingY = 0
     $rowSpacing = 0
     $borderThickness = 1
+    $backgroundColor = [System.Drawing.Color]::FromArgb(20, 20, 20)
 
     $measureBitmap = New-Object System.Drawing.Bitmap(1, 1)
     $measureGraphics = [System.Drawing.Graphics]::FromImage($measureBitmap)
@@ -194,13 +196,13 @@ function Export-WeeklyPng {
         $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
         $graphics.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::ClearTypeGridFit
 
-        $graphics.Clear([System.Drawing.Color]::Black)
+        $graphics.Clear($backgroundColor)
 
         $innerX = [int]$borderThickness
         $innerY = [int]$borderThickness
         $innerWidth = [int]($canvasWidth - ($borderThickness * 2))
         $innerHeight = [int]($canvasHeight - ($borderThickness * 2))
-        $innerBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::Black)
+        $innerBrush = New-Object System.Drawing.SolidBrush($backgroundColor)
         $graphics.FillRectangle($innerBrush, $innerX, $innerY, $innerWidth, $innerHeight)
         $innerBrush.Dispose()
 
@@ -221,6 +223,9 @@ function Export-WeeklyPng {
 
                 $fgColor = ConvertTo-DrawColor -ConsoleColorName ([string]$segment.ForegroundColor)
                 $bgColor = ConvertTo-DrawColor -ConsoleColorName ([string]$segment.BackgroundColor)
+                if ([string]$segment.BackgroundColor -eq "Black") {
+                    $bgColor = $backgroundColor
+                }
 
                 $bgBrush = New-Object System.Drawing.SolidBrush($bgColor)
                 $graphics.FillRectangle($bgBrush, $x, $y, $segmentWidth, $lineHeight)
@@ -256,7 +261,7 @@ function Export-WeeklyPng {
 
             for ($scanY = 0; $scanY -lt $canvasHeight; $scanY++) {
                 $scanColor = $bitmap.GetPixel($x, $scanY)
-                if ($scanColor.R -ne 0 -or $scanColor.G -ne 0 -or $scanColor.B -ne 0) {
+                if ($scanColor.R -ne $backgroundColor.R -or $scanColor.G -ne $backgroundColor.G -or $scanColor.B -ne $backgroundColor.B) {
                     $hasNonBlackPixel = $true
                     break
                 }

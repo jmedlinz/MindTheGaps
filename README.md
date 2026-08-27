@@ -52,7 +52,7 @@ Weekly image output:
 
 - `-WeeksBack`: Number of weeks back to process. `-1` means last week; positive values are normalized to their absolute value.
 - `-ShowGaps`: Includes the gaps between work periods in the weekly summary.
-- `-ExportWeeklyImage`: Exports the weekly summary image to `archive/` using the `mtg_weekly_YYYYMMDD.png` naming format.
+- `-ExportWeeklyImage`: Exports the weekly summary image to `archive/` using the `mtg_weekly_YYYYMMDD.png` naming format. When this switch is used, console output is reduced to daily totals plus the final weekly total.
 - `-SkipDuplicates`: Same duplicate-image filtering behavior as the daily script.
 
   > Beta feature warning: `-SkipDuplicates` is considered beta-quality. It can be inconsistent depending on image quality, and results should not be trusted.

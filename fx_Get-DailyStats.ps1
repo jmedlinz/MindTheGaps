@@ -10,6 +10,9 @@
 .PARAMETER ShowGaps
 	If this command is included then the script will output the gaps between work periods.
 	The default is FALSE, ie don't show the gaps.
+.PARAMETER SummaryOnly
+	If this command is included then console output will include only the daily total worked line.
+	The default is FALSE, ie show full daily details.
 #>
 
 #######################################################################
@@ -24,7 +27,9 @@ function Get-DailyStats {
 		[Parameter()]
 		[switch]$SkipDuplicates = $FALSE,
 		[Parameter()]
-		[switch]$ShowGaps = $FALSE
+		[switch]$ShowGaps = $FALSE,
+		[Parameter()]
+		[switch]$SummaryOnly = $FALSE
 	 )
 
 	# The sub-folder to process.  Defaults to the current date.
@@ -191,10 +196,12 @@ function Get-DailyStats {
 									)
 								}
 
-								# Output a line showing the timespan and hours/minutes of the gap.
-								Write-Host $Prefix -NoNewline -ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
-								Write-Host $GapLine `
-										-ForegroundColor DarkGray
+								if (-not $SummaryOnly) {
+									# Output a line showing the timespan and hours/minutes of the gap.
+									Write-Host $Prefix -NoNewline -ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
+									Write-Host $GapLine `
+											-ForegroundColor DarkGray
+								}
 							}
 						}
 
@@ -215,10 +222,12 @@ function Get-DailyStats {
 							)
 						}
 
-						# Output a line showing the timespan and hours/minutes worked.
-						Write-Host $Prefix -NoNewline -ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
-						Write-Host $WorkLine `
-								-ForegroundColor White
+						if (-not $SummaryOnly) {
+							# Output a line showing the timespan and hours/minutes worked.
+							Write-Host $Prefix -NoNewline -ForegroundColor Black -BackgroundColor $Colors[$DayFormat]
+							Write-Host $WorkLine `
+									-ForegroundColor White
+						}
 
 						# We're starting a gap, so record the last file we worked on, ie the start of the gap.
 						$LastWorkedFile = $LastFile
@@ -242,7 +251,11 @@ function Get-DailyStats {
 	}
 
 	# The last line should be underlined.  If we're not showing gaps then we'll need to underline the total worked line.
-	if ($ShowGaps) {
+	if ($SummaryOnly) {
+		# Underline text for summary-only mode.
+		$Preformat  = $UnderlineStart
+		$Postformat = $UnderlineEnd
+	} elseif ($ShowGaps) {
 		# Don't underline text.
 		$Preformat  = ""
 		$Postformat = ""
@@ -300,10 +313,12 @@ function Get-DailyStats {
 			)
 		}
 
-		Write-ConsoleMessage $DailyGapLine `
-				-ForegroundColor Black `
-				-BackgroundColor $Colors[$DayFormat] `
-				-NoNewline
+		if (-not $SummaryOnly) {
+			Write-ConsoleMessage $DailyGapLine `
+					-ForegroundColor Black `
+					-BackgroundColor $Colors[$DayFormat] `
+					-NoNewline
+		}
 
 		$TotalTime = $DailyWorkTime + $DailyGapTime
 		$DailyTotalLabel = "Total spent:".PadRight($PngSummaryLabelWidth)
@@ -322,16 +337,18 @@ function Get-DailyStats {
 			) -Underline
 		}
 
-		$Preformat  = $UnderlineStart
-		$Postformat = $UnderlineEnd
-		Write-ConsoleMessage ("{0}Total spent:                    {1} hours {2} minutes){3}" `
-				-f $Preformat, `
-				$TotalTime.TotalHours.ToString("0.0").PadLeft(4), `
-				$TotalTime.TotalMinutes.ToString("(0").PadLeft(5), `
-				$Postformat) `
-				-ForegroundColor Black `
-				-BackgroundColor $Colors[$DayFormat] `
-				-NoNewline
+		if (-not $SummaryOnly) {
+			$Preformat  = $UnderlineStart
+			$Postformat = $UnderlineEnd
+			Write-ConsoleMessage ("{0}Total spent:                    {1} hours {2} minutes){3}" `
+					-f $Preformat, `
+					$TotalTime.TotalHours.ToString("0.0").PadLeft(4), `
+					$TotalTime.TotalMinutes.ToString("(0").PadLeft(5), `
+					$Postformat) `
+					-ForegroundColor Black `
+					-BackgroundColor $Colors[$DayFormat] `
+					-NoNewline
+		}
 	}
 
 	Return $DailyWorkTime, $DailyGapTime
